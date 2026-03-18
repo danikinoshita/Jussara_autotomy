@@ -26,7 +26,7 @@ data <- read.table("~/Jussara_autotomy/data/raw/data.tsv", header = T, stringsAs
 ```
 
 Information that we discussed in the reunion: 
-We need to make a descriptive analyses (glm) comparing if the autotomy differ between: population (which is the collectors because they collected only 1 time each year in four different years ps: the data is temporally organized); type of leg (1,2,3 or 4), and side (right or left)
+We need to make a descriptive analyses (glm) comparing if the autotomy differ between: population (which is the collectors because they collected only 1 time each year in four different years ps: the data is temporally organized); type of leg (1,2,3 or 4); and side (right or left)
 
 
 
