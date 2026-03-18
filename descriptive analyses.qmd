@@ -3,3 +3,35 @@ title: "descriptive analyses"
 format: html
 ---
 
+```{r installing and calling Rpackages}
+# install.packages("Rsampling")
+# install.packages("vegan")
+# install.packages("pbapply")
+# install.packages("ggplot2")
+# install.packages("glmmTMB")
+# install.packages("DHARMa")
+# install.packages("dplyr")
+
+library(Rsampling)
+library(vegan)
+library(pbapply)
+library(ggplot2)
+library(glmmTMB)
+library(DHARMa)
+library(dplyr)
+```
+
+```{r importing the data}
+data <- read.table("~/Jussara_autotomy/data/raw/data.tsv", header = T, stringsAsFactors = T, sep='\t')
+```
+
+Information that we discussed in the reunion: 
+We need to make a descriptive analyses (glm) comparing if the autotomy differ between: population (which is the collectors because they collected only 1 time each year in four different years ps: the data is temporally organized); type of leg (1,2,3 or 4), and side (right or left)
+
+
+
+
+
+
+
+
