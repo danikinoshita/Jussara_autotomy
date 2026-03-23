@@ -39,49 +39,5 @@ data <- data_raw[, -c(10, 11, 12)]
 Information that we discussed in the reunion: 
 We need to make a descriptive analyses (glmm) comparing if the autotomy differ between: population (which is the collectors because they collected only 1 time each year in four different years ps: the data is temporally organized - 2002, 2009, 2011, 2012); type of leg (1,2,3 or 4); and side (right or left)
 
-```{r transforming into a long table}
-df_long <- data %>%
-  pivot_longer(cols = r1:l4,
-               names_to = "leg_id",
-               values_to = "autotomy") %>%
-  mutate(
-    side = ifelse(grepl("^r", leg_id), "right", "left"),
-    leg = gsub("[rl]", "", leg_id)
-  )
-```
-sim, nessa parte eu pedi ajuda pro chat gpt, mas conferindo a df_long, ele me parece certo
-
-```{r running the glmm}
-model_1 <- glmmTMB(autotomy ~ leg * side * population + (1 | id),
-                  data = df_long,
-                  family = binomial)
-
-summary (model_1)
-
-```
-
-(0.0) eu acho que deu efeito significativo para a perna 2 e para a pop MC (*shocked*)
-
-```{r testing the residuals - DHARMa}
-res <- simulateResiduals(model_1, plot = T)
-testZeroInflation(res)
-```
-
-aqui eu to meio :P por causa dessa linha vermelha q ta basicamente horizontal, mas o DHARMa ta acusando ela vermelha, irei lindamente ignorar pois os outros teste estavam lindos (0~0)
-
-```{r testando separadamente e excluindo cada um}
-drop1(model_1, test = "Chisq")
-model_2 <- glmmTMB(autotomy ~ leg + side + population + (1 | id),
-                  data = df_long,
-                  family = binomial)
-#indicou que nenhuma interação foi relevante
-drop1(model_2, test = "Chisq")
-#indicou que somente as variáveis leg e population foram relevantes o que condiz com o resultado do glmmm do model_1
-```
-
-```{r testando qual perna e qual população foi diferente}
-emmeans(model_2, pairwise ~ leg, type = "response")
-emmeans(model_2, pairwise ~ population, type = "response")
-```
 
 
