@@ -29,15 +29,34 @@ library(emmeans)
 
 ```{r importing the data}
 data_raw <- read.table("~/Jussara_autotomy/data/raw/data.tsv", header = T, stringsAsFactors = T, sep='\t')
-data <- data_raw[, -c(10, 11, 12)]
-```
-
-```{r resuming the data}
-
 ```
 
 Information that we discussed in the reunion: 
 We need to make a descriptive analyses (glmm) comparing if the autotomy differ between: population (which is the collectors because they collected only 1 time each year in four different years ps: the data is temporally organized - 2002, 2009, 2011, 2012); type of leg (1,2,3 or 4); and side (right or left)
+
+```{r transforming into a long table}
+data <- data_raw[, -c(10, 11, 12)]
+df_long <- data %>%
+  pivot_longer(cols = r1:l4,
+               names_to = "leg_id",
+               values_to = "autotomy") %>%
+  mutate(
+    side = ifelse(grepl("^r", leg_id), "right", "left"),
+    leg = gsub("[rl]", "", leg_id)
+  )
+```
+
+
+```{r resuming the data - not necessary, just checking some infos}
+df_long %>% filter(population == "MC", autotomy == 0) %>% nrow() #3538
+df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
+(3538+342)/8 # 485 (n de indivíduos em MC)
+342/3880 # 0.088
+
+
+```
+
+
 
 
 
