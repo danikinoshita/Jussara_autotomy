@@ -1,0 +1,67 @@
+
+
+# Overview
+
+This repository contains the data and R scripts used in the study:
+
+**PAPER REF**.
+
+PAPER BRIEF DESCRIPTION.
+
+This repository includes the original and processed datasets, and fully
+annotated analysis scripts used to generate all results and figures
+presented in the manuscript. The materials are provided to ensure
+transparency, reproducibility, and long-term accessibility of the
+analyses.
+
+# Repository structure
+
+The repository is organized into the following folders and files:
+
+## Data
+
+### Raw data
+
+### Processed data
+
+## Scripts
+
+Scripts used for data curation and transformation are provided in
+`scripts/`. These scripts:
+
+# How to reproduce the results
+
+These steps restore the exact package environment (via {renv}) and run
+the analysis documents in the intended order, reproducing all figures
+and outputs as in the manuscript.
+
+## Prerequisites
+
+- R (\>= 4.5.0) installed.
+
+## Step-by-Step
+
+1.  Clone this repository:
+
+``` r
+git clone https://github.com/danikinoshita/Jussara_autotomy.git
+```
+
+2.  Open the R project file (`Jussara_autotomy.Rproj`) in RStudio.
+
+3.  Restore the package environment using {renv}:
+
+``` r
+install.packages("renv")       # if not already installed
+renv::restore()                # installs packages from renv.lock
+```
+
+4.  Run the analysis scripts in order:
+    1.  `scripts/01_descriptive_analyses.qmd`
+
+## Session info
+
+The full R session information used in the original analysis is
+available in `session_info.txt`.
+
+# References
