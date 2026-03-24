@@ -35,8 +35,7 @@ Information that we discussed in the reunion:
 We need to make a descriptive analyses (glmm) comparing if the autotomy differ between: population (which is the collectors because they collected only 1 time each year in four different years ps: the data is temporally organized - 2002, 2009, 2011, 2012); type of leg (1,2,3 or 4); and side (right or left)
 
 ```{r transforming into a long table}
-data <- data_raw[, -c(10, 11, 12)]
-df_long <- data %>%
+df_long <- data_raw[, -c(10, 11, 12)] %>%
   pivot_longer(cols = r1:l4,
                names_to = "leg_id",
                values_to = "autotomy") %>%
@@ -46,17 +45,63 @@ df_long <- data %>%
   )
 ```
 
-
 ```{r resuming the data - not necessary, just checking some infos}
 df_long %>% filter(population == "MC", autotomy == 0) %>% nrow() #3538
 df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
 (3538+342)/8 # 485 (n de indivíduos em MC)
 342/3880 # 0.088
 
+# data_raw = 1141 
+1141*8 # = 9128 (df_long)
 
 ```
 
+Please check the following tests, I feel like I did something wrong, but I don't know what
+
+```{r models for the glmm}
+
+m0 <- glmmTMB(autotomy ~ 1 + (1|id), family = binomial(link = "logit"), data = df_long)
+
+mZI <- glmmTMB(autotomy ~ 1 + (1|id), family = binomial(link = "logit"), ziformula = ~1, data = df_long)
 
 
+m1 <- glmmTMB(autotomy ~ side * leg * population + (1|id), family = binomial(link = "logit"), data = df_long)
 
+m2 <- glmmTMB(autotomy ~ side + leg + population + (1|id), family = binomial(link = "logit"), data = df_long)
+
+
+m3 <- glmmTMB(autotomy ~ side + leg + (1|id), family = binomial(link = "logit"), data = df_long)
+
+m4 <- glmmTMB(autotomy ~ leg + population + (1|id), family = binomial(link = "logit"), data = df_long)
+
+m5 <- glmmTMB(autotomy ~ side + population + (1|id), family = binomial(link = "logit"), data = df_long)
+
+
+aic <- AIC(m0, mZI, m1, m2, m3, m4, m5)
+aic[order(aic$AIC),]
+aic$delta <- aic$AIC - min(aic$AIC)
+
+# m2 is the lowest AIC but m4 had a difference of only dAIC = 0.27
+# consistent with the result that the population and type of leg are significant, but the side don't matter
+summary(m2)
+```
+
+```{r cheking the residuals using the DHARMa package}
+res <- simulateResiduals(m2, plot = T)
+testZeroInflation(res)
+testDispersion(res)
+testUniformity(res)
+```
+
+```{r anova - teste de razão de verossimilhança}
+
+anova(m3, m2, test = "Chisq") # population 0.0003033 ***
+anova(m4, m2, test = "Chisq") # side 0.1322
+anova(m5, m2, test = "Chisq") # leg < 2.2e-16 ***
+
+```
+
+```{r Post-Hoc ? Using emmeans}
+
+```
 
