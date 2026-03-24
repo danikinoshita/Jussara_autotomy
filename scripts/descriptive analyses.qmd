@@ -95,6 +95,9 @@ testUniformity(res)
 
 ```{r anova - teste de razão de verossimilhança}
 
+anova(m0, m1, test = "Chisq") # interaction < 2.2e-16 ***
+anova(m0, m2, test = "Chisq") # no interaction < 2.2e-16 ***
+
 anova(m3, m2, test = "Chisq") # population 0.0003033 ***
 anova(m4, m2, test = "Chisq") # side 0.1322
 anova(m5, m2, test = "Chisq") # leg < 2.2e-16 ***
@@ -102,6 +105,9 @@ anova(m5, m2, test = "Chisq") # leg < 2.2e-16 ***
 ```
 
 ```{r Post-Hoc ? Using emmeans}
+
+emmeans(m2, pairwise ~ leg, type = "response")
+emmeans(m2, pairwise ~ population, type = "response")
 
 ```
 
