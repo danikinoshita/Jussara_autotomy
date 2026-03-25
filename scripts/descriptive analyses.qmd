@@ -86,7 +86,11 @@ df_res <- data_raw %>%
 
 df_leg <- df_long[, -c(1, 3, 5)] %>%
   group_by(population, leg) %>%
-  summarise(n_total = sum(autotomy == 1))
+  summarise(n_total = sum(autotomy == 1)) %>%
+  group_by(population) %>%
+  mutate(perc = n_total / sum(n_total)) %>%
+  mutate(leg = factor(leg, levels = c(1,2,3,4))) %>%
+  ungroup()
  
     
 color_final <- c(
@@ -148,45 +152,88 @@ ggplot(df_res, aes(
   )
 
 #
+
+
 #####
-ggplot(df_res, aes(
-  x = legs,
-  y = perc,
-  fill = fill_final,
-  pattern = total
-)) +
-  geom_bar_pattern(
-    stat = "identity",
-    position = position_stack(reverse = TRUE),  
-    color = "black",
-    pattern_colour = "black",
-    pattern_fill = "black",
-    pattern_angle = 90,
-    pattern_density = 0.3,
-    pattern_spacing = 0.02,
-    pattern_size = 0.1
-  ) +
-  scale_fill_manual(
-    values = color_final,
-    guide = "none"
-  ) +
-  scale_pattern_manual(
-    values = patterns,
-    labels = c("0", "1", "2", "3", "4")
-  ) +
-  scale_y_continuous(labels = scales::percent_format(),
-                     expand = c(0,0))+
+TG = ggplot(df_leg[df_leg$population == "TG",], aes(x = leg, y = perc)) +
+  geom_col(position = "dodge") +
+  geom_col(fill = "#0072B2") +
+  scale_y_continuous(
+  limits = c(0, 0.5),
+  labels = scales::percent_format(),
+  expand = c(0, 0)) +
   labs(
-    x = "População",
-    y = "Porcentagem de indivíduos"
+    x = "Número de pernas autotomizadas",
+    y = "Porcentagem",
   ) +
-  theme_minimal() +
+   theme_minimal() +
   theme(
     panel.grid = element_blank(),
     panel.background = element_blank(),
     axis.line = element_line(color = "black")
   )
+TG
 
+MC = ggplot(df_leg[df_leg$population == "MC",], aes(x = leg, y = perc)) +
+  geom_col(position = "dodge") +
+  geom_col(fill = "#E69F00") +
+  scale_y_continuous(
+  limits = c(0, 0.5),
+  labels = scales::percent_format(),
+  expand = c(0, 0)) +
+  labs(
+    x = "Número de pernas autotomizadas",
+    y = "Porcentagem",
+  ) +
+   theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
+MC
+
+GE = ggplot(df_leg[df_leg$population == "GE",], aes(x = leg, y = perc)) +
+  geom_col(position = "dodge") +
+  geom_col(fill = "#009E73") +
+  scale_y_continuous(
+  limits = c(0, 0.5),
+  labels = scales::percent_format(),
+  expand = c(0, 0)) +
+  labs(
+    x = "Número de pernas autotomizadas",
+    y = "Porcentagem",
+  ) +
+   theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
+GE
+
+GP = ggplot(df_leg[df_leg$population == "GP",], aes(x = leg, y = perc)) +
+  geom_col(position = "dodge") +
+  geom_col(fill = "#D55E00") +
+  scale_y_continuous(
+  limits = c(0, 0.5),
+  labels = scales::percent_format(),
+  expand = c(0, 0)) +
+  labs(
+    x = "Número de pernas autotomizadas",
+    y = "Porcentagem",
+  ) +
+   theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
+GP
+
+
+(TG | MC) /
+(GE | GP)
 
 ```
 
@@ -353,6 +400,7 @@ summary(m_final)
 We estimated marginal probabilities of autotomy for each combination of leg type and population using the `emmeans` package, obtaining predictions on the response scale while averaging over random effects.
 
 Estimated probabilities revealed a consistent pattern across populations, with leg II showing the highest probability of autotomy and leg III the lowest, while legs I and IV showed intermediate values. Although overall probabilities varied among populations, the relative ranking of leg types was conserved, indicating a stable functional structure in autotomy susceptibility.
+
 ```{r marginal (population-level) probabilities}
 emm <- emmeans(m_final, ~ leg + population, type = "response")
 
