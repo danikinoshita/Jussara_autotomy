@@ -1,38 +1,41 @@
 ---
-title: "descriptive analyses"
-format: html
+title: "01 - Descriptive analysis"
+subtitle: "01_descriptive_analysis.qmd"
+format: 
+  html:
+    embed-resources: true
+bibliography: ../references.bib
+eval: true
+warning: false
+knitr:
+  opts_chunk: 
+    message: false
 ---
 
-```{r installing and calling Rpackages}
-install.packages("Rsampling")
-install.packages("vegan")
-install.packages("pbapply")
-install.packages("ggplot2")
-install.packages("glmmTMB")
-install.packages("DHARMa")
-install.packages("dplyr")
-install.packages("tidyr")
-install.packages("emmeans")
-```
+# Overview
+
+In this document, we perform a descriptive analysis to investigate whether autotomy in *Jussara sp.* differs between leg types (I, II, III, or IV), sides (right or left leg) and populations (collectors). We use generalized linear mixed models (GLMMs) to analyze the data, accounting for the repeated measures on individuals.
 
 ```{r calling Rpackages}
-library(Rsampling)
-library(vegan)
-library(pbapply)
-library(ggplot2)
-library(glmmTMB)
-library(DHARMa)
+library(here)
 library(dplyr)
 library(tidyr)
+library(glmmTMB)
+library(DHARMa)
 library(emmeans)
 ```
 
-```{r importing the data}
-data_raw <- read.table("~/Jussara_autotomy/data/raw/data.tsv", header = T, stringsAsFactors = T, sep='\t')
-```
+The `data_raw` dataset contains the raw data on autotomy for *Jussara sp.* collected by different collectors across four years (2002, 2009, 2011, and 2012). Each row corresponds to an individual, and the columns include information on the population (collector), leg type (r1, r2, r3, r4 for right legs and l1, l2, l3, l4 for left legs), and whether autotomy occurred (0 or 1). The data is already temporally organized and each collector is associated with a different year (TG = 2002, MC = 2009, GE = 2011 and GP = 2012).
 
-Information that we discussed in the reunion: 
-We need to make a descriptive analyses (glmm) comparing if the autotomy differ between: population (which is the collectors because they collected only 1 time each year in four different years ps: the data is temporally organized - 2002, 2009, 2011, 2012); type of leg (1,2,3 or 4); and side (right or left)
+```{r importing the data}
+data_raw <- read.table(here("data","raw","data.tsv"), header = T, stringsAsFactors = T, sep='\t')
+
+str(data_raw)
+
+# reorder the levels of the population factor to ensure they are in the correct temporal order
+data_raw <- data_raw %>%
+  mutate(population = factor(population, levels = c("TG", "MC", "GE", "GP")))
+```
 
 ```{r transforming into a long table}
 df_long <- data_raw[, -c(10, 11, 12)] %>%
@@ -40,74 +43,207 @@ df_long <- data_raw[, -c(10, 11, 12)] %>%
                names_to = "leg_id",
                values_to = "autotomy") %>%
   mutate(
-    side = ifelse(grepl("^r", leg_id), "right", "left"),
-    leg = gsub("[rl]", "", leg_id)
+    side = factor(ifelse(grepl("^r", leg_id), "right", "left"),
+                  levels = c("right", "left")),
+    leg = factor(gsub("[rl]", "", leg_id), levels = c("1", "2", "3", "4")),
+    leg_id = factor(leg_id, levels = c("r1", "r2", "r3", "r4", "l1", "l2", "l3", "l4"))
   )
+
+str(df_long)
+summary(df_long[,2:ncol(df_long)])
 ```
 
-```{r resuming the data - not necessary, just checking some infos}
-df_long %>% filter(population == "MC", autotomy == 0) %>% nrow() #3538
+```{r resuming the data - not necessary, just checking some infos, include=FALSE}
+df_long %>% filter(population == "MC", autotomy == 0) %>% nrow()  #3538
 df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
-(3538+342)/8 # 485 (n de indivíduos em MC)
-342/3880 # 0.088
+(3538+342)/8 # 485 (id number in MC)
+342/3880 # 0.088 percentage of autotomy in MC population
 
-# data_raw = 1141 
+# checling how many individuals lost legs in each population 
+df_resumo <- data_raw %>%
+    group_by(population, total) %>%
+    summarise(n_individuos = n(), .groups = "drop")
+
+# data_raw = 1141 individuals, each with 8 legs, so total rows in df_long should be
 1141*8 # = 9128 (df_long)
 
+# I think the upper comment refers to the old data that was already updated, but now 
+# we have 1405 individuals, so the total rows in df_long should be 1405*8 = 11240, which is correct.
+length(unique(data_raw$id))
 ```
 
-Please check the following tests, I feel like I did something wrong, but I don't know what.
-
-```{r models for the glmm}
-
-m0 <- glmmTMB(autotomy ~ 1 + (1|id), family = binomial(link = "logit"), data = df_long)
-
-mZI <- glmmTMB(autotomy ~ 1 + (1|id), family = binomial(link = "logit"), ziformula = ~1, data = df_long)
 
 
-m1 <- glmmTMB(autotomy ~ side * leg * population + (1|id), family = binomial(link = "logit"), data = df_long)
+# GLMMs for autotomy
 
-m2 <- glmmTMB(autotomy ~ side + leg + population + (1|id), family = binomial(link = "logit"), data = df_long)
+We fitted a series of generalized linear mixed models (GLMMs) to evaluate whether the probability of autotomy varies across leg identity, body side, and population, while accounting for repeated measurements within individuals. All models included a random intercept for individual identity (id), which captures among-individual heterogeneity and the non-independence of the eight legs measured per individual.
 
+We adopted a hierarchical modeling strategy, starting from a null model with only the random effect of individual, and progressively adding fixed effects of leg type, side, and population, as well as their interactions. Model comparisons were conducted using likelihood ratio tests and AIC, allowing us to assess whether autotomy probabilities vary across these factors and whether interaction terms are supported by the data.
 
-m3 <- glmmTMB(autotomy ~ side + leg + (1|id), family = binomial(link = "logit"), data = df_long)
+Importantly, these models are not intended to directly test our focal biological hypotheses. Instead, they are used to identify whether baseline probabilities of autotomy differ across legs, sides, or populations. This step is critical to inform the structure of subsequent permutation analyses, in which we test whether individuals avoid losing functionally redundant legs (same type) or impair locomotion (same side). Specifically, if autotomy probabilities differ across legs or sides, permutation procedures must preserve this structure to avoid biased inference.
 
-m4 <- glmmTMB(autotomy ~ leg + population + (1|id), family = binomial(link = "logit"), data = df_long)
+We initially considered zero-inflated models to account for the large proportion of zeros in the data. However, following the recommendations in the DHARMa documentation (Hartig 2024), we did not include zero-inflated models in our final model set. For Bernoulli (0/1) data, an excess of zeros is expected when the underlying probability of success is low, and does not by itself indicate zero inflation. Moreover, zero-inflated binomial models can lead to overfitting and convergence issues when there is no clear biological mechanism generating structural zeros. In our system, all legs are in principle capable of autotomizing, and the observed zeros most likely reflect the natural rarity of the event rather than a separate zero-generating process.
 
-m5 <- glmmTMB(autotomy ~ side + population + (1|id), family = binomial(link = "logit"), data = df_long)
+Model diagnostics were performed using the DHARMa package. However, interpretation of residual diagnostics requires caution for Bernoulli data. Because each observation represents a single trial, the variance is fully determined by the mean, and heterogeneity in underlying probabilities may not manifest as overdispersion or visible residual patterns. Consequently, standard diagnostic plots may suggest an adequate fit even when relevant predictors are missing.
 
+To improve sensitivity to structured model misfit, we examined grouped residuals using biologically meaningful variables, including individual identity (id), leg type (leg), side (side), and population. Following DHARMa guidelines, grouping residuals by variables that may correlate with model error can reveal hidden structure, such as unmodeled heterogeneity or missing predictors. In this context, evidence of dispersion or non-uniformity after grouping is interpreted as an indication of structured model misfit, rather than as classical overdispersion.
 
-aic <- AIC(m0, mZI, m1, m2, m3, m4, m5)
-aic[order(aic$AIC),]
-aic$delta <- aic$AIC - min(aic$AIC)
+Overall, model adequacy was assessed based on convergence, stability of parameter estimates, and consistency between model structure and biological expectations, rather than relying solely on residual diagnostics.
 
-# m2 is the lowest AIC but m4 had a difference of only dAIC = 0.27
-# consistent with the result that the population and type of leg are significant, but the side don't matter
-summary(m2)
+## Null models
+
+The null model assumes a constant probability of autotomy across all legs and populations, while accounting for repeated measures via a random intercept for individual identity (`id`).
+
+Although standard diagnostics did not indicate lack of fit, grouped residuals revealed strong deviations when structured by leg and population, but not by individual identity. This indicates substantial heterogeneity in autotomy probabilities across legs and populations that is not captured by a constant-probability model, while confirming that among-individual variation is adequately modeled by the random effect.
+
+These results justify the inclusion of leg and population as fixed effects in subsequent models.
+
+```{r null model}
+m0 <- glmmTMB(autotomy ~ 1 + (1|id), 
+              family = binomial(link = "logit"), 
+              data = df_long)
+
+m0sim <- simulateResiduals(m0, plot = T)
+
+# group by individual
+testDispersion(recalculateResiduals(m0sim, group = df_long$id))
+
+# group by leg
+testDispersion(recalculateResiduals(m0sim, group = df_long$leg))
+
+# group by side
+testDispersion(recalculateResiduals(m0sim, group = df_long$side))
+
+# group by population
+testDispersion(recalculateResiduals(m0sim, group = df_long$population))
 ```
 
-```{r cheking the residuals using the DHARMa package}
-res <- simulateResiduals(m2, plot = T)
-testZeroInflation(res)
-testDispersion(res)
-testUniformity(res)
+## No interaction
+
+We fitted a model including side, leg, and population as fixed effects, and a random intercept for individual identity (`id`) to account for repeated measures. By excluding interaction terms, this model assumes that the effects of `leg`, `side`, and `population` are additive.
+
+Population was treated as a fixed effect due to the small number of levels (four), allowing direct estimation of differences in autotomy probability among collectors.
+
+Including leg and population as fixed effects removed the structured deviations observed in the null model. Grouped residual diagnostics did not reveal significant dispersion when structured by leg, population, side, or individual identity, indicating that the additive model adequately captures the main sources of variation in autotomy probability.
+
+These results indicate that variation in autotomy probability is primarily structured by leg identity and population, with no evidence of additional unmodeled heterogeneity at this level of complexity.
+
+```{r no interaction}
+m1 <- glmmTMB(autotomy ~ side + leg + population + (1|id), 
+              family = binomial(link = "logit"), 
+              data = df_long)
+
+m1sim <- simulateResiduals(m1, plot = T)
+
+# group by individual
+testDispersion(recalculateResiduals(m1sim, group = df_long$id))
+
+# group by leg
+testDispersion(recalculateResiduals(m1sim, group = df_long$leg))
+
+# group by side
+testDispersion(recalculateResiduals(m1sim, group = df_long$side))
+
+# group by population
+testDispersion(recalculateResiduals(m1sim, group = df_long$population))
 ```
 
-```{r anova - teste de razão de verossimilhança}
+## Two-way interactions
 
-anova(m0, m1, test = "Chisq") # interaction < 2.2e-16 ***
-anova(m0, m2, test = "Chisq") # no interaction < 2.2e-16 ***
+We fitted a model including all two-way interactions among side, leg, and population, in addition to the random effect of individual identity (id).
 
-anova(m3, m2, test = "Chisq") # population 0.0003033 ***
-anova(m4, m2, test = "Chisq") # side 0.1322
-anova(m5, m2, test = "Chisq") # leg < 2.2e-16 ***
+Including interaction terms did not alter the residual diagnostic patterns observed for the additive model. Grouped residuals did not reveal significant dispersion when structured by leg, population, side, or individual identity, indicating that the interaction model does not capture additional structured variation beyond that already explained by the additive effects.
 
+These results suggest that the main sources of variation in autotomy probability are adequately described by additive effects of leg identity and population, with no strong evidence for additional interaction structure at this level.
+
+```{r two-way model}
+m2 <- glmmTMB(autotomy ~ (side + leg + population)^2 + (1|id), 
+              family = binomial(link = "logit"), 
+              data = df_long)
+
+m2sim <- simulateResiduals(m2, plot = T)
+
+# group by individual
+testDispersion(recalculateResiduals(m2sim, group = df_long$id))
+
+# group by leg
+testDispersion(recalculateResiduals(m2sim, group = df_long$leg))
+
+# group by side
+testDispersion(recalculateResiduals(m2sim, group = df_long$side))
+
+# group by population
+testDispersion(recalculateResiduals(m2sim, group = df_long$population))
 ```
 
-```{r Post-Hoc ? Using emmeans}
+## Three-way interactions
 
-emmeans(m2, pairwise ~ leg, type = "response")
-emmeans(m2, pairwise ~ population, type = "response")
+We fitted a model including all two-way and three-way interactions among side, leg, and population.
 
+As with the additive and two-way interaction models, grouped residual diagnostics did not reveal significant dispersion when structured by leg, population, side, or individual identity. Thus, including higher-order interactions did not improve model adequacy or reveal additional structured variation.
+
+These results indicate that the main sources of variation in autotomy probability are already captured by additive effects of leg identity and population, with no evidence supporting more complex interaction structure.
+
+```{r three-way model}
+m3 <- glmmTMB(autotomy ~ side * leg * population + (1|id), 
+              family = binomial(link = "logit"), 
+              data = df_long)
+
+m3sim <- simulateResiduals(m3, plot = T)
+
+# group by individual
+testDispersion(recalculateResiduals(m3sim, group = df_long$id))
+
+# group by leg
+testDispersion(recalculateResiduals(m3sim, group = df_long$leg))
+
+# group by side
+testDispersion(recalculateResiduals(m3sim, group = df_long$side))
+
+# group by population
+testDispersion(recalculateResiduals(m3sim, group = df_long$population))
+```
+
+## Model comparison
+
+Model comparison strongly supported the inclusion of fixed effects over the null model, with the additive model (including leg, side, and population) providing a substantially better fit than the null model. However, adding two-way or three-way interaction terms did not improve model fit, indicating that higher-order interactions are not supported by the data.
+
+To assess the contribution of individual predictors, we compared the additive model to reduced models excluding each fixed effect. Leg identity and population both had strong effects on autotomy probability, whereas removing side did not significantly reduce model fit.
+
+These results indicate that variation in autotomy probability is primarily structured by leg identity and population, with no evidence for strong asymmetry between left and right sides or for higher-order interaction effects.
+
+```{r anova}
+anova(m0, m1, m2, m3)
+```
+
+```{r drop1}
+drop1(m1, test = "Chisq")
+```
+
+## Final model
+
+```{r final model}
+m_final <- glmmTMB(autotomy ~ leg + population + (1|id),
+                   family = binomial,
+                   data = df_long)
+
+simulateResiduals(m_final, plot = T)
+
+summary(m_final)
+```
+
+# Marginal probabilities
+
+We estimated marginal probabilities of autotomy for each combination of leg type and population using the `emmeans` package, obtaining predictions on the response scale while averaging over random effects.
+
+Estimated probabilities revealed a consistent pattern across populations, with leg II showing the highest probability of autotomy and leg III the lowest, while legs I and IV showed intermediate values. Although overall probabilities varied among populations, the relative ranking of leg types was conserved, indicating a stable functional structure in autotomy susceptibility.
+```{r marginal (population-level) probabilities}
+emm <- emmeans(m_final, ~ leg + population, type = "response")
+
+emm <- as.data.frame(emm)
+```
+
+```{r save emm}
+# saveRDS(emm, file = here("data","processed","marginal_autotomy_probabilities.rds"))
 ```
 

@@ -3,10 +3,18 @@ format: gfm
 editor:
   markdown:
     wrap: 70
-bibliography: referencias.bib
+bibliography: references.bib
 ---
 
 # Overview
+
+This repository contains the data and R scripts used in the study:
+
+**PAPER REF**.
+
+PAPER BRIEF DESCRIPTION.
+
+This repository includes the original and processed datasets, and fully annotated analysis scripts used to generate all results and figures presented in the manuscript. The materials are provided to ensure transparency, reproducibility, and long-term accessibility of the analyses.
 
 # Repository structure
 
