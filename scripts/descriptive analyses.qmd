@@ -59,10 +59,6 @@ df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
 (3538+342)/8 # 485 (id number in MC)
 342/3880 # 0.088 percentage of autotomy in MC population
 
-# checling how many individuals lost legs in each population 
-df_resumo <- data_raw %>%
-    group_by(population, total) %>%
-    summarise(n_individuos = n(), .groups = "drop")
 
 # data_raw = 1141 individuals, each with 8 legs, so total rows in df_long should be
 1141*8 # = 9128 (df_long)
@@ -72,7 +68,127 @@ df_resumo <- data_raw %>%
 length(unique(data_raw$id))
 ```
 
+```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
+library(ggplot2)
+library(ggpattern)
+library(scico)
+library(patchwork)
 
+df_res <- data_raw %>%
+    group_by(population, total) %>%
+    summarise(n_individuos = n(), .groups = "drop") %>%
+    group_by(population) %>%
+    mutate(perc = n_individuos / sum(n_individuos)) %>%
+    group_by(population) %>%
+    mutate(
+    total = factor(total, levels = c(0,1,2,3,4)),
+    fill_final = ifelse(as.character(total) == "0", "zero", population))
+
+df_leg <- df_long[, -c(1, 3, 5)] %>%
+  group_by(population, leg) %>%
+  summarise(n_total = sum(autotomy == 1))
+ 
+    
+color_final <- c(
+  "zero" = "#BBBBBB",
+  "1" = "#0072B2",
+  "2" = "#E69F00",
+  "3" = "#009E73",
+  "4" = "#D55E00"
+)
+
+patterns <- c(
+  "0" = "none",
+  "1" = "stripe",
+  "2" = "none",
+  "3" = "none",
+  "4" = "none"
+)
+
+# % individuals x population - no autotomy x 1leg x 2legs x 3legs x 4legs 
+#####  
+
+ggplot(df_res, aes(
+  x = population,
+  y = perc,
+  fill = fill_final,
+  pattern = total
+)) +
+  geom_bar_pattern(
+    stat = "identity",
+    position = position_stack(reverse = TRUE),  
+    color = "black",
+    pattern_colour = "black",
+    pattern_fill = "black",
+    pattern_angle = 90,
+    pattern_density = 0.3,
+    pattern_spacing = 0.02,
+    pattern_size = 0.1
+  ) +
+  scale_fill_manual(
+    values = color_final,
+    guide = "none"
+  ) +
+  scale_pattern_manual(
+    values = patterns,
+    labels = c("0", "1", "2", "3", "4")
+  ) +
+  scale_y_continuous(labels = scales::percent_format(),
+                     expand = c(0,0))+
+  labs(
+    x = "População",
+    y = "Porcentagem de indivíduos",
+    pattern = "Número de pernas autotomizadas"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
+
+#
+#####
+ggplot(df_res, aes(
+  x = legs,
+  y = perc,
+  fill = fill_final,
+  pattern = total
+)) +
+  geom_bar_pattern(
+    stat = "identity",
+    position = position_stack(reverse = TRUE),  
+    color = "black",
+    pattern_colour = "black",
+    pattern_fill = "black",
+    pattern_angle = 90,
+    pattern_density = 0.3,
+    pattern_spacing = 0.02,
+    pattern_size = 0.1
+  ) +
+  scale_fill_manual(
+    values = color_final,
+    guide = "none"
+  ) +
+  scale_pattern_manual(
+    values = patterns,
+    labels = c("0", "1", "2", "3", "4")
+  ) +
+  scale_y_continuous(labels = scales::percent_format(),
+                     expand = c(0,0))+
+  labs(
+    x = "População",
+    y = "Porcentagem de indivíduos"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
+
+
+```
 
 # GLMMs for autotomy
 
