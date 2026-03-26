@@ -35,10 +35,11 @@ str(data_raw)
 # reorder the levels of the population factor to ensure they are in the correct temporal order
 data_raw <- data_raw %>%
   mutate(population = factor(population, levels = c("TG", "MC", "GE", "GP")))
+data_raw$autotomy <- ifelse(data_raw$total >= 1, 1, 0)
 ```
 
 ```{r transforming into a long table}
-df_long <- data_raw[, -c(10, 11, 12)] %>%
+df_long <- data_raw[, -c(10, 11, 12,14)] %>%
   pivot_longer(cols = r1:l4,
                names_to = "leg_id",
                values_to = "autotomy") %>%
@@ -68,6 +69,8 @@ df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
 length(unique(data_raw$id))
 ```
 
+
+
 ```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
 library(ggplot2)
 library(ggpattern)
@@ -90,11 +93,12 @@ df_leg <- df_long[, -c(1, 3, 5)] %>%
   group_by(population) %>%
   mutate(perc = n_total / sum(n_total)) %>%
   mutate(leg = factor(leg, levels = c(1,2,3,4))) %>%
-  ungroup()
+  ungroup() %>%
+  mutate (perc_t = n_total / sum(n_total))
  
     
 color_final <- c(
-  "zero" = "#BBBBBB",
+  "zero" = NA,
   "1" = "#0072B2",
   "2" = "#E69F00",
   "3" = "#009E73",
@@ -109,8 +113,23 @@ patterns <- c(
   "4" = "none"
 )
 
-# % individuals x population - no autotomy x 1leg x 2legs x 3legs x 4legs 
-#####  
+scale_color_manual(
+  values = c(
+    "0" = NA,      # 🔥 sem contorno para zero
+    "1" = "black",
+    "2" = "black",
+    "3" = "black",
+    "4" = "black"
+  ),
+  guide = "none"
+)
+
+
+```
+
+```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
+
+# % individuals x population - no autotomy x 1leg x 2legs x 3legs x 4legs NO DIFFERENCE
 
 ggplot(df_res, aes(
   x = population,
@@ -118,17 +137,26 @@ ggplot(df_res, aes(
   fill = fill_final,
   pattern = total
 )) +
-  geom_bar_pattern(
+   geom_bar_pattern(
+    aes(color = total),  # 👈 mapear aqui
     stat = "identity",
-    position = position_stack(reverse = TRUE),  
-    color = "black",
     pattern_colour = "black",
     pattern_fill = "black",
     pattern_angle = 90,
     pattern_density = 0.3,
     pattern_spacing = 0.02,
     pattern_size = 0.1
-  ) +
+) +
+  scale_color_manual(
+   values = c(
+    "0" = NA,      # 🔥 sem contorno para zero
+    "1" = "black",
+    "2" = "black",
+    "3" = "black",
+    "4" = "black"
+  ),
+    guide = "none"
+) +
   scale_fill_manual(
     values = color_final,
     guide = "none"
@@ -137,7 +165,7 @@ ggplot(df_res, aes(
     values = patterns,
     labels = c("0", "1", "2", "3", "4")
   ) +
-  scale_y_continuous(labels = scales::percent_format(),
+  scale_y_continuous(limits = c(0, 1),labels = scales::percent_format(),
                      expand = c(0,0))+
   labs(
     x = "População",
@@ -150,11 +178,12 @@ ggplot(df_res, aes(
     panel.background = element_blank(),
     axis.line = element_line(color = "black")
   )
+```
 
-#
+```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
 
+# Which leg were more autotomized? It is not taking into account the non autotomized legs, I think this may be something to investigate
 
-#####
 TG = ggplot(df_leg[df_leg$population == "TG",], aes(x = leg, y = perc)) +
   geom_col(position = "dodge") +
   geom_col(fill = "#0072B2") +
@@ -163,7 +192,7 @@ TG = ggplot(df_leg[df_leg$population == "TG",], aes(x = leg, y = perc)) +
   labels = scales::percent_format(),
   expand = c(0, 0)) +
   labs(
-    x = "Número de pernas autotomizadas",
+    x = "Autotomized leg",
     y = "Porcentagem",
   ) +
    theme_minimal() +
@@ -172,7 +201,6 @@ TG = ggplot(df_leg[df_leg$population == "TG",], aes(x = leg, y = perc)) +
     panel.background = element_blank(),
     axis.line = element_line(color = "black")
   )
-TG
 
 MC = ggplot(df_leg[df_leg$population == "MC",], aes(x = leg, y = perc)) +
   geom_col(position = "dodge") +
@@ -182,7 +210,7 @@ MC = ggplot(df_leg[df_leg$population == "MC",], aes(x = leg, y = perc)) +
   labels = scales::percent_format(),
   expand = c(0, 0)) +
   labs(
-    x = "Número de pernas autotomizadas",
+    x = "Autotomized leg",
     y = "Porcentagem",
   ) +
    theme_minimal() +
@@ -191,7 +219,6 @@ MC = ggplot(df_leg[df_leg$population == "MC",], aes(x = leg, y = perc)) +
     panel.background = element_blank(),
     axis.line = element_line(color = "black")
   )
-MC
 
 GE = ggplot(df_leg[df_leg$population == "GE",], aes(x = leg, y = perc)) +
   geom_col(position = "dodge") +
@@ -201,7 +228,7 @@ GE = ggplot(df_leg[df_leg$population == "GE",], aes(x = leg, y = perc)) +
   labels = scales::percent_format(),
   expand = c(0, 0)) +
   labs(
-    x = "Número de pernas autotomizadas",
+    x = "Autotomized leg",
     y = "Porcentagem",
   ) +
    theme_minimal() +
@@ -210,7 +237,6 @@ GE = ggplot(df_leg[df_leg$population == "GE",], aes(x = leg, y = perc)) +
     panel.background = element_blank(),
     axis.line = element_line(color = "black")
   )
-GE
 
 GP = ggplot(df_leg[df_leg$population == "GP",], aes(x = leg, y = perc)) +
   geom_col(position = "dodge") +
@@ -220,7 +246,7 @@ GP = ggplot(df_leg[df_leg$population == "GP",], aes(x = leg, y = perc)) +
   labels = scales::percent_format(),
   expand = c(0, 0)) +
   labs(
-    x = "Número de pernas autotomizadas",
+    x = "Autotomized leg",
     y = "Porcentagem",
   ) +
    theme_minimal() +
@@ -229,13 +255,57 @@ GP = ggplot(df_leg[df_leg$population == "GP",], aes(x = leg, y = perc)) +
     panel.background = element_blank(),
     axis.line = element_line(color = "black")
   )
-GP
 
+TT = ggplot(df_leg, aes(x = leg, y = perc_t)) +
+  geom_col(position = "dodge") +
+  geom_col(fill = "#862D06") +
+  scale_y_continuous(
+  limits = c(0, 0.5),
+  labels = scales::percent_format(),
+  expand = c(0, 0)) +
+  labs(
+    x = "Autotomized leg",
+    y = "Porcentagem",
+  ) +
+   theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
 
 (TG | MC) /
-(GE | GP)
+(GE | GP) /
+(plot_spacer() | TT | plot_spacer())
+```
+
+```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
+
+# % legs autotomized x populations: I need to create another df with the porcentages of this
+
+ggplot(data_raw, aes(
+    x = population,
+    y = autotomy,
+    fill = population
+)) +
+  scale_fill_manual(
+    values = c("#0072B2","#E69F00","#009E73","#D55E00"),
+    guide = "none"
+  ) +
+  labs(
+    x = "População",
+    y = "Porcentagem de autotomia"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
 
 ```
+
+
 
 # GLMMs for autotomy
 
@@ -406,6 +476,19 @@ emm <- emmeans(m_final, ~ leg + population, type = "response")
 
 emm <- as.data.frame(emm)
 ```
+
+
+
+The results indicate that autotomy differs across populations. However, this pattern may be driven by the MC population having a higher number of individuals that autotomized two or more legs. Therefore, we also tested whether the proportion of individuals exhibiting autotomy differed among populations using a GLM.
+
+```{r}
+m <- glm(autotomy ~ population, 
+         family = binomial, 
+         data = data_raw)
+
+summary(m)
+```
+
 
 ```{r save emm}
 # saveRDS(emm, file = here("data","processed","marginal_autotomy_probabilities.rds"))
