@@ -61,8 +61,6 @@ df_long %>% filter(population == "MC", autotomy == 0) %>% nrow()  #3538
 df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
 (3538+342)/8 # 485 (id number in MC)
 342/3880 # 0.088 percentage of autotomy in MC population
-
-
 # data_raw = 1141 individuals, each with 8 legs, so total rows in df_long should be
 1141*8 # = 9128 (df_long)
 
@@ -79,244 +77,242 @@ library(ggpattern)
 library(scico)
 library(patchwork)
 
-df_res <- data_raw %>%
-    group_by(population, total) %>%
-    summarise(n_individuos = n(), .groups = "drop") %>%
-    group_by(population) %>%
-    mutate(perc = n_individuos / sum(n_individuos)) %>%
-    group_by(population) %>%
-    mutate(
-    total = factor(total, levels = c(0,1,2,3,4)),
-    fill_final = ifelse(as.character(total) == "0", "zero", population))
+#========================================================================
+#========================================================================
 
-df_total <- df_res %>%
+df_graphic <- data_raw %>%
+  group_by(population, total) %>%
+  summarise (n_individuos = n(), .groups = "drop") %>%
+  mutate(n_aut = n_individuos*total) %>%
+  group_by(population) %>%
+  mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
+  mutate(perc_aut_pop = n_aut / sum(n_aut)) %>%
+  ungroup()
+df_graphic$total <- as.factor(df_graphic$total)
+
+df_graphic_total <- data_raw %>%
   group_by(total) %>%
-  summarise(
-    n_individuos = sum(n_individuos),   # ou a coluna que representa contagem
-    .groups = "drop"
-  ) %>%
-  mutate(
-    population = "Total",
-    perc = n_individuos / sum(n_individuos)
-  )
+  summarise (n_individuos = n(), .groups = "drop") %>% 
+  mutate(n_aut = n_individuos*total) %>% 
+  mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
+  mutate(perc_aut_pop = n_aut / sum(n_aut)) %>%
+  mutate(population = c("Total", "Total", "Total","Total", "Total"), .before = 1) %>%
+  ungroup() 
+df_graphic_total$total <- as.factor(df_graphic_total$total)
 
-df_res <- bind_rows(df_res, df_total)
-df_res <- df_res %>%
+df_graphic <- bind_rows(df_graphic, df_graphic_total) %>%
   mutate(fill_final = ifelse(as.character(total) == "0", "zero", population))
 
-df_leg <- df_long[, -c(1, 3, 5)] %>%
-  group_by(population, leg) %>%
-  summarise(n_total = sum(autotomy == 1)) %>%
-  group_by(population) %>%
-  mutate(perc = n_total / sum(n_total)) %>%
-  mutate(leg = factor(leg, levels = c(1,2,3,4))) %>%
-  ungroup() %>%
-  mutate (perc_t = n_total / sum(n_total))
+sequence <- unique(df_graphic$population)
 
+
+
+df_graphic_res <- df_graphic %>%
+  mutate(total = ifelse(total == 0, "0", ">0")) %>%
+  group_by(population, total) %>%
+  summarise(n_individuos = sum(n_individuos),
+            .groups = "drop") %>%
+  group_by(population) %>%
+  mutate(
+    perc_ind_pop = n_individuos / sum(n_individuos)) %>%
+  ungroup() %>%
+  mutate(population = factor(population, levels = sequence)) %>%
+  arrange(population, total)
+df_graphic_res <- df_graphic_res %>%
+  mutate(fill_final = ifelse(total == "0", "zero", as.character(population)))
+
+
+
+#========================================================================
+#========================================================================
+
+
+df_graphic_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
+  mutate(
+    side = case_when(
+      right == 0 & left == 0 ~ "none",
+      right >= 1 & left >= 1 ~ "both",
+      right >= 1 & left == 0 ~ "right",
+      right == 0 & left >= 1 ~ "left",
+    )) %>%
+  group_by(population, side) %>%
+  summarise(n_individuos = n(), .groups = "drop") %>%
+  group_by(population) %>%
+  mutate(
+    perc_ind_side = n_individuos / sum(n_individuos)) %>%
+  ungroup()
+
+df_side_total <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
+  mutate(
+    side = case_when(
+      right == 0 & left == 0 ~ "none",
+      right >= 1 & left >= 1 ~ "both",
+      right >= 1 & left == 0 ~ "right",
+      right == 0 & left >= 1 ~ "left",
+    )) %>%
+  group_by(side) %>%
+  summarise(n_individuos = n(), .groups = "drop") %>% 
+  mutate(
+    perc_ind_side = n_individuos / sum(n_individuos)) %>%
+  mutate(population = c("Total", "Total", "Total","Total"), .before = 1) %>%
+  ungroup()
+
+df_graphic_side <- bind_rows(df_graphic_side, df_side_total) %>%
+  mutate(fill_final = case_when(
+      side == "none" ~ "none",
+      side == "both" ~ as.character(population),
+      side == "right" ~ as.character(population),
+      side == "left" ~ as.character(population),
+    ))
+
+df_graphic_side <- df_graphic_side %>%
+  mutate(
+    population = factor(population, levels = sequence),
+    side = factor(side, levels = c("none", "right", "left", "both"))
+  ) %>%
+  arrange(side, population)
+
+  
+  
+  
+df_aut_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
+  group_by(population) %>%
+  summarise(
+    right = sum(right, na.rm = TRUE),
+    left  = sum(left, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(total_aut = right+left) %>%
+  pivot_longer(
+    cols = c(right, left),
+    names_to = "side",
+    values_to = "autotomy"
+  ) %>%
+  mutate(perc_aut_side = autotomy / total_aut) %>%
+  ungroup() 
+
+df_aut_side_t <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
+  summarise(
+    right = sum(right, na.rm = TRUE),
+    left  = sum(left, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(total_aut = right+left) %>%
+  pivot_longer(
+    cols = c(right, left),
+    names_to = "side",
+    values_to = "autotomy"
+  ) %>%
+  mutate(perc_aut_side = autotomy / total_aut) %>%
+  mutate(population = c("Total", "Total"), .before = 1) %>%
+  ungroup() 
+
+df_aut_side <- bind_rows(df_aut_side, df_aut_side_t) %>%
+  mutate(fill_final = ifelse(side == "right", "right", "left"))
+
+
+df_aut_side <- df_aut_side %>%
+  mutate(
+    population = factor(population, levels = sequence),
+    side = factor(side, levels = c("none", "right", "left", "both"))
+  ) %>%
+  arrange(population, side)
+
+
+
+#========================================================================
+#========================================================================
+
+
+# padronizing the colors for each population
 
 color_final <- c()
+color_final["zero"] = "lightgray"
 color_final["Total"] <- "#862D06"
 color_final["MC"] <- "#E69F00"
 color_final["TG"] <- "#0072B2"
 color_final["GE"] <- "#009E73"
 color_final["GP"] <- "#D55E00"
+color_final ["none"] = "lightgray"
 
 
-patterns <- c(
-  "0" = "none",
-  "1" = "stripe",
-  "2" = "circle",
-  "3" = "crosshatch",
-  "4" = "wave"
-)
-
-scale_color_manual(
-  values = c(
-    "0" = NA,      # 🔥 sem contorno para zero
-    "1" = "black",
-    "2" = "black",
-    "3" = "black",
-    "4" = "black"
-  ),
-  guide = "none"
-)
-
+patterns <- c()
+patterns ["0"] <- "none"
+patterns ["1"] <- "stripe"
+patterns ["2"] <- "crosshatch"
+patterns ["3"] <- "circle"
+patterns ["4"] <- "wave"
+patterns ["none"] <- "none"
+patterns ["right"] <- "stripe"
+patterns ["left"] <- "circle"
+patterns ["both"] <- "none"
 
 ```
 
 ```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
 
 # % individuals x population - no autotomy x 1leg x 2legs x 3legs x 4legs NO DIFFERENCE
-df_res$population <- factor(
-  df_res$population,
-  levels = c("TG", "MC", "GE", "GP", "Total")
-)
 
-ggplot(df_res, aes(
-  x = population,
-  y = perc,
-  fill = fill_final,
-  pattern = total
-)) +
-   geom_bar_pattern(
-    aes(color = total),  # 👈 mapear aqui
-    stat = "identity",
-    pattern_colour = "black",
-    pattern_fill = "black",
-    pattern_angle = 90,
-    pattern_density = 0.3,
-    pattern_spacing = 0.02,
-    pattern_size = 0.05
-) +
-  scale_color_manual(
-   values = c(
-    "0" = NA,      # 🔥 sem contorno para zero
-    "1" = "black",
-    "2" = "black",
-    "3" = "black",
-    "4" = "black"
-  ),
-    guide = "none"
-) +
-  scale_fill_manual(
-    values = color_final,
-    guide = "none"
-  ) +
-  scale_pattern_manual(
-    values = patterns,
-    labels = c("0", "1", "2", "3", "4")
-  ) +
-  scale_y_continuous(limits = c(0, 1),labels = scales::percent_format(),
-                     expand = c(0,0))+
+ggplot(df_graphic, aes(x = population, y = perc_ind_pop, fill = fill_final, pattern = total)) +
+  geom_bar_pattern(stat = "identity",
+                   position = position_stack(reverse = TRUE),
+                   color = "black",  
+                   pattern_color = "black",
+                   pattern_alpha = 0.5,
+                   pattern_fill = "black",   
+                   pattern_angle = 45,       
+                   pattern_density = 0.2,
+                   pattern_size = 0.2,
+                   pattern_spacing = 0.02) + 
+  scale_fill_manual(values = color_final, guide = "none") +
+  scale_pattern_manual(values = patterns) +
   labs(
+    title = "Proporção de Indivíduos autotomizados",
     x = "População",
-    y = "Porcentagem de indivíduos",
-    pattern = "Número de pernas autotomizadas"
+    y = "Proporção de indivíduos autotomizados",
+    fill = "none"
   ) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
   theme_minimal() +
   theme(
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(color = "black")
+    panel.grid = element_blank(),      
+    axis.line = element_line(color = "black"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    legend.position = "right"
   )
+# okay, I think this is a better code, I mean, it is more clean. There is a few more adjusts that I want to do, but the complicated version is basically this. The following code is another version of this graphic, more clean, without the numbers of autotomy for each individual
+#!!! a sequencia das populações ta me irritando aq kkkk
 
 
-
-
-
-# simple graphic, without the number of legs per individual:
-
-ggplot(df_res, aes(
-  x = population,
-  y = perc,
-  fill = fill_final
-)) +
-  geom_col(
-    position = position_stack(reverse = TRUE),
-    color = "black"
-  ) +
-  scale_fill_manual(
-    values = color_final,
-    guide = "none"
-  ) +
-  scale_y_continuous(
-    limits = c(0, 1),
-    labels = scales::percent_format(),
-    expand = c(0,0)
-  ) +
+# VERSÃO SIMPLIFICADA DO GRÁFICO ACIMA
+ggplot(df_graphic_res, aes(x = population, y = perc_ind_pop, fill = fill_final)) +
+  geom_bar(stat = "identity",
+           position = position_stack(reverse = TRUE)) +
+  scale_fill_manual(values = color_final) +
   labs(
+    title = "Proporção de Indivíduos autotomizados",
     x = "População",
-    y = "Porcentagem de indivíduos"
+    y = "Proporção de indivíduos autotomizados",
+    fill = "none"
   ) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
   theme_minimal() +
   theme(
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(color = "black")
+    panel.grid = element_blank(),      
+    axis.line = element_line(color = "black"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    legend.position = "none"
   )
+
 
 
 ```
 
 ```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
 
-# Which leg were more autotomized? It is not taking into account the non autotomized legs, I think this may be something to investigate
-
 TG = ggplot(df_leg[df_leg$population == "TG",], aes(x = leg, y = perc)) +
   geom_col(position = "dodge") +
   geom_col(fill = "#0072B2") +
-  scale_y_continuous(
-  limits = c(0, 0.5),
-  labels = scales::percent_format(),
-  expand = c(0, 0)) +
-  labs(
-    x = "Autotomized leg",
-    y = "Porcentagem",
-  ) +
-   theme_minimal() +
-  theme(
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(color = "black")
-  )
-
-MC = ggplot(df_leg[df_leg$population == "MC",], aes(x = leg, y = perc)) +
-  geom_col(position = "dodge") +
-  geom_col(fill = "#E69F00") +
-  scale_y_continuous(
-  limits = c(0, 0.5),
-  labels = scales::percent_format(),
-  expand = c(0, 0)) +
-  labs(
-    x = "Autotomized leg",
-    y = "Porcentagem",
-  ) +
-   theme_minimal() +
-  theme(
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(color = "black")
-  )
-
-GE = ggplot(df_leg[df_leg$population == "GE",], aes(x = leg, y = perc)) +
-  geom_col(position = "dodge") +
-  geom_col(fill = "#009E73") +
-  scale_y_continuous(
-  limits = c(0, 0.5),
-  labels = scales::percent_format(),
-  expand = c(0, 0)) +
-  labs(
-    x = "Autotomized leg",
-    y = "Porcentagem",
-  ) +
-   theme_minimal() +
-  theme(
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(color = "black")
-  )
-
-GP = ggplot(df_leg[df_leg$population == "GP",], aes(x = leg, y = perc)) +
-  geom_col(position = "dodge") +
-  geom_col(fill = "#D55E00") +
-  scale_y_continuous(
-  limits = c(0, 0.5),
-  labels = scales::percent_format(),
-  expand = c(0, 0)) +
-  labs(
-    x = "Autotomized leg",
-    y = "Porcentagem",
-  ) +
-   theme_minimal() +
-  theme(
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(color = "black")
-  )
-
-TT = ggplot(df_leg, aes(x = leg, y = perc_t)) +
-  geom_col(position = "dodge") +
-  geom_col(fill = "#862D06") +
   scale_y_continuous(
   limits = c(0, 0.5),
   labels = scales::percent_format(),
@@ -337,29 +333,77 @@ TT = ggplot(df_leg, aes(x = leg, y = perc_t)) +
 (plot_spacer() | TT | plot_spacer())
 ```
 
-```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
 
-# % legs autotomized x populations: I need to create another df with the porcentages of this
+```{r Graphic in construction, delivery forecast:10/04/2026 [left x right] echo=FALSE}
 
-# ggplot(data_raw, aes(
-    x = population,
-    y = autotomy,
-    fill = population
-)) +
-  scale_fill_manual(
-    values = c("#0072B2","#E69F00","#009E73","#D55E00"),
-    guide = "none"
-  ) +
+## left x right x both (individuals)
+
+ggplot(df_graphic_side, aes(x = population, y = perc_ind_side, fill = fill_final, pattern = side, group = side)) +
+  geom_bar_pattern(stat = "identity",
+                   position = "stack",
+                   color = "black",  
+                   pattern_color = "black",
+                   pattern_alpha = 0.5,
+                   pattern_fill = "black",   
+                   pattern_angle = 45,       
+                   pattern_density = 0.3,
+                   pattern_size = 0.2,
+                   pattern_spacing = 0.02) + 
+  scale_fill_manual(values = color_final, guide = "none") +
+  scale_pattern_manual(values = patterns) +
   labs(
+    title = "Proporção de Indivíduos autotomizados",
     x = "População",
-    y = "Porcentagem de autotomia"
+    y = "Proporção de indivíduos autotomizados",
+    fill = "none"
   ) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
   theme_minimal() +
   theme(
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(color = "black")
+    panel.grid = element_blank(),      
+    axis.line = element_line(color = "black"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    legend.position = "right"
   )
+
+
+## left x right (autotomys)
+ggplot(df_aut_side, aes(x = population, y = perc_aut_side, fill = population, pattern = fill_final)) +
+  geom_bar_pattern(stat = "identity",
+                   position = position_stack(reverse = TRUE),
+                   color = "black",  
+                   pattern_color = "black",
+                   pattern_alpha = 0.5,
+                   pattern_fill = "black",   
+                   pattern_angle = 45,       
+                   pattern_density = 0.3,
+                   pattern_size = 0.2,
+                   pattern_spacing = 0.02) + 
+  scale_fill_manual(values = color_final, guide = "none") +
+  scale_pattern_manual(values = patterns) +
+  labs(
+    title = "Autotomias",
+    x = "População",
+    y = "Proporção de indivíduos autotomizados",
+    fill = "none"
+  ) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),      
+    axis.line = element_line(color = "black"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    legend.position = "right"
+  )
+
+
+
+
+```
+
+```{r Graphic in construction, delivery forecast:10/04/2026 [probability of legs being lost] echo=FALSE}
+
+
 
 ```
 
