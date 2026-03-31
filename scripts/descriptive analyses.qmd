@@ -76,6 +76,8 @@ library(ggplot2)
 library(ggpattern)
 library(scico)
 library(patchwork)
+library(grid)
+library(cowplot)
 
 #========================================================================
 #========================================================================
@@ -83,19 +85,15 @@ library(patchwork)
 df_graphic <- data_raw %>%
   group_by(population, total) %>%
   summarise (n_individuos = n(), .groups = "drop") %>%
-  mutate(n_aut = n_individuos*total) %>%
   group_by(population) %>%
   mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
-  mutate(perc_aut_pop = n_aut / sum(n_aut)) %>%
   ungroup()
 df_graphic$total <- as.factor(df_graphic$total)
 
 df_graphic_total <- data_raw %>%
   group_by(total) %>%
   summarise (n_individuos = n(), .groups = "drop") %>% 
-  mutate(n_aut = n_individuos*total) %>% 
   mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
-  mutate(perc_aut_pop = n_aut / sum(n_aut)) %>%
   mutate(population = c("Total", "Total", "Total","Total", "Total"), .before = 1) %>%
   ungroup() 
 df_graphic_total$total <- as.factor(df_graphic_total$total)
@@ -104,8 +102,35 @@ df_graphic <- bind_rows(df_graphic, df_graphic_total) %>%
   mutate(fill_final = ifelse(as.character(total) == "0", "zero", population))
 
 sequence <- unique(df_graphic$population)
+df_graphic <- df_graphic %>%
+  mutate(population = factor(population, levels = sequence))%>%
+  arrange(population, total)
 
+#========================================================================
+#========================================================================
 
+### gráfico de porb
+df_graphic_res <- data_raw %>%
+  group_by(population) %>%
+  summarise(
+    aut   = sum(total > 0),
+    noaut = sum(total == 0),
+    .groups = "drop"
+  ) %>%
+  ungroup()
+
+df_total_res <- data_raw %>%
+  summarise(
+    aut   = sum(total > 0),
+    noaut = sum(total == 0),
+    .groups = "drop"
+  ) %>%
+  mutate(population = c("Total"), .before = 1)
+df_graphic_res <- bind_rows(df_graphic_res, df_total_res)%>%
+  mutate(population = factor(population, levels = sequence)) %>%
+  arrange(population)
+#=========================================================================
+###gráfico de proporção
 
 df_graphic_res <- df_graphic %>%
   mutate(total = ifelse(total == 0, "0", ">0")) %>%
@@ -122,10 +147,8 @@ df_graphic_res <- df_graphic_res %>%
   mutate(fill_final = ifelse(total == "0", "zero", as.character(population)))
 
 
-
 #========================================================================
 #========================================================================
-
 
 df_graphic_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
   mutate(
@@ -253,7 +276,7 @@ patterns ["both"] <- "none"
 
 # % individuals x population - no autotomy x 1leg x 2legs x 3legs x 4legs NO DIFFERENCE
 
-ggplot(df_graphic, aes(x = population, y = perc_ind_pop, fill = fill_final, pattern = total)) +
+id_aut = ggplot(df_graphic, aes(x = population, y = perc_ind_pop, fill = fill_final, pattern = total)) +
   geom_bar_pattern(stat = "identity",
                    position = position_stack(reverse = TRUE),
                    color = "black",  
@@ -280,19 +303,17 @@ ggplot(df_graphic, aes(x = population, y = perc_ind_pop, fill = fill_final, patt
     axis.text.x = element_text(angle = 0, hjust = 1),
     legend.position = "right"
   )
-# okay, I think this is a better code, I mean, it is more clean. There is a few more adjusts that I want to do, but the complicated version is basically this. The following code is another version of this graphic, more clean, without the numbers of autotomy for each individual
-#!!! a sequencia das populações ta me irritando aq kkkk
 
 
-# VERSÃO SIMPLIFICADA DO GRÁFICO ACIMA
-ggplot(df_graphic_res, aes(x = population, y = perc_ind_pop, fill = fill_final)) +
+id_simple = ggplot(df_graphic_res, aes(x = population, y = perc_ind_pop, fill = fill_final)) +
   geom_bar(stat = "identity",
-           position = position_stack(reverse = TRUE)) +
+           position = position_stack(reverse = TRUE),
+           color = "black") +
   scale_fill_manual(values = color_final) +
   labs(
-    title = "Proporção de Indivíduos autotomizados",
+    title = "Proporção de Indivíduos autotomizados por população",
     x = "População",
-    y = "Proporção de indivíduos autotomizados",
+    y = "Indivíduos (%)",
     fill = "none"
   ) +
   scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
@@ -301,14 +322,60 @@ ggplot(df_graphic_res, aes(x = population, y = perc_ind_pop, fill = fill_final))
     panel.grid = element_blank(),      
     axis.line = element_line(color = "black"),
     axis.text.x = element_text(angle = 0, hjust = 1),
-    legend.position = "none"
+    legend.position = "right"
   )
+
+# VERSÃO DE PROBABILIDADE DO GRÁFICO ACIMA
+m_bin <- glm(
+  cbind(aut, noaut) ~ population,
+  data = df_graphic_res,
+  family = binomial
+)
+emm <- emmeans(m_bin, ~ population, type = "response")
+emm_df <- as.data.frame(emm)
+
+prob_id_aut = ggplot(emm_df, aes(x = population, y = prob, fill = population)) +
+  geom_col(color = "black") +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = 0.2
+  ) +
+  scale_fill_manual(values = color_final, guide = "none") +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0))+
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),      
+    axis.line = element_line(color = "black"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    legend.position = "right"
+  )
+
+
+ggsave("individuos_s.png", plot = id_simple, width = 10, height = 7)
+ggsave("individuos.png", plot = id_aut, width = 10, height = 7)
+
+
+
+
+
+
+
+
+
+
+
+
+
+###### falta agora a de autotomia e não de indivíduos
+
 
 
 
 ```
 
 ```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE}
+## não acho q esse gráfico aqui seja necessário
+
 
 TG = ggplot(df_leg[df_leg$population == "TG",], aes(x = leg, y = perc)) +
   geom_col(position = "dodge") +
@@ -577,6 +644,134 @@ Estimated probabilities revealed a consistent pattern across populations, with l
 emm <- emmeans(m_final, ~ leg + population, type = "response")
 
 emm <- as.data.frame(emm)
+```
+
+
+```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE [PROBABILITIY OF AUTOTOMY]}
+
+##### gráficos separados !ainda precisa fazer um total
+
+
+TG=ggplot(emm[emm$population == "TG",], aes(x = factor(leg), y = prob, color = population)) +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = 0.1,
+    linewidth = 1.2) +
+  geom_point(
+    size = 3)+
+  scale_y_continuous(
+    limits = c(0, 0.2),
+    breaks = seq(0, 0.2, by = 0.05)) +
+  scale_color_manual(values = color_final, guide = "none") +
+  labs(
+    title = "TG",
+    x = "Leg",
+    y = "Probability of autotomy"
+  ) +
+  theme_classic()+
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_blank()
+)
+
+
+MC=ggplot(emm[emm$population == "MC",], aes(x = factor(leg), y = prob, color = population)) +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = 0.1,
+    linewidth = 1.2) +
+  geom_point(
+    size = 3)+
+   scale_y_continuous(
+    limits = c(0, 0.2),
+    breaks = seq(0, 0.2, by = 0.05)) +
+  scale_color_manual(values = color_final, guide = "none") +
+  labs(
+    title = "MC",
+    x = "Leg",
+    y = "Probability of autotomy"
+  ) +
+  theme_classic()+
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_blank()
+)
+
+GE=ggplot(emm[emm$population == "GE",], aes(x = factor(leg), y = prob, color = population)) +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = 0.1,
+    linewidth = 1.2) +
+  geom_point(
+    size = 3)+
+   scale_y_continuous(
+    limits = c(0, 0.2),
+    breaks = seq(0, 0.2, by = 0.05)) +
+  scale_color_manual(values = color_final, guide = "none") +
+  labs(
+    title = "GE",
+    x = "Leg",
+    y = "Probability of autotomy"
+  ) +
+  theme_classic()+
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_blank()
+)
+
+GP=ggplot(emm[emm$population == "GP",], aes(x = factor(leg), y = prob, color = population)) +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = 0.1,
+    linewidth = 1.2) +
+  geom_point(
+    size = 3)+
+   scale_y_continuous(
+    limits = c(0, 0.2),
+    breaks = seq(0, 0.2, by = 0.05)) +
+  scale_color_manual(values = color_final, guide = "none") +
+  labs(
+    title = "GP",
+    x = "Leg",
+    y = "Probability of autotomy"
+  ) +
+  theme_classic()+
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_blank()
+)
+
+
+#### juntando os gráficos em uma prancha
+
+x_label <- ggdraw() +
+  draw_label("Leg", size = 16)
+
+y_label <- ggdraw() +
+  draw_label("Probability of autotomy", 
+             angle = 90, size = 16)
+
+plots <- plot_grid(
+  TG, MC,
+  GE, GP,
+  ncol = 2
+)
+
+final <- plot_grid(
+  y_label, plots,
+  ncol = 2,
+  rel_widths = c(0.1, 1)
+)
+
+final <- plot_grid(
+  final,
+  x_label,
+  ncol = 1,
+  rel_heights = c(1, 0.1)
+)
+
+final
+ggsave("plot.png", plot = final, width = 10, height = 7)
 ```
 
 
