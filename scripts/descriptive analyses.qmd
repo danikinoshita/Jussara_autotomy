@@ -492,7 +492,7 @@ ggplot(emm_df2, aes(x = pop_side, y = prob, fill = population, pattern = side)) 
   ) +
   scale_fill_manual(values = color_final, guide = "none") +
   scale_pattern_manual(values = patterns) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),      
@@ -690,7 +690,7 @@ TG=ggplot(emm[emm$population == "TG",], aes(x = factor(leg), y = prob, color = p
     size = 3)+
   scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_color_manual(values = color_final, guide = "none") +
   labs(
     title = "TG",
@@ -713,7 +713,7 @@ MC=ggplot(emm[emm$population == "MC",], aes(x = factor(leg), y = prob, color = p
     size = 3)+
    scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_color_manual(values = color_final, guide = "none") +
   labs(
     title = "MC",
@@ -735,7 +735,7 @@ GE=ggplot(emm[emm$population == "GE",], aes(x = factor(leg), y = prob, color = p
     size = 3)+
    scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_color_manual(values = color_final, guide = "none") +
   labs(
     title = "GE",
@@ -757,7 +757,7 @@ GP=ggplot(emm[emm$population == "GP",], aes(x = factor(leg), y = prob, color = p
     size = 3)+
    scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_color_manual(values = color_final, guide = "none") +
   labs(
     title = "GP",
@@ -816,7 +816,7 @@ TG=ggplot(emm[emm$population == "TG",], aes(x = factor(leg), y = prob, fill = po
     linewidth = 1) +
   scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_fill_manual(values = color_final, guide = "none") +
   labs(
     title = "TG",
@@ -838,7 +838,7 @@ MC=ggplot(emm[emm$population == "MC",], aes(x = factor(leg), y = prob, fill = po
     linewidth = 1) +
   scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_fill_manual(values = color_final, guide = "none") +
   labs(
     title = "TG",
@@ -859,7 +859,7 @@ GE=ggplot(emm[emm$population == "GE",], aes(x = factor(leg), y = prob, fill = po
     linewidth = 1) +
   scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_fill_manual(values = color_final, guide = "none") +
   labs(
     title = "TG",
@@ -880,7 +880,7 @@ GP=ggplot(emm[emm$population == "GP",], aes(x = factor(leg), y = prob, fill = po
     linewidth = 1) +
   scale_y_continuous(
     limits = c(0, 0.2),
-    breaks = seq(0, 0.2, by = 0.05)) +
+    breaks = seq(0, 0.2, by = 0.05), expand = c(0, 0)) +
   scale_fill_manual(values = color_final, guide = "none") +
   labs(
     title = "TG",
