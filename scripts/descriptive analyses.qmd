@@ -480,10 +480,11 @@ Estimated probabilities revealed a consistent pattern across populations, with l
 emm <- emmeans(m_final, ~ leg + population, type = "response")
 
 emm <- as.data.frame(emm)
+View(emm)
 ```
 
 
-```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE [PROBABILITIY OF AUTOTOMY]}
+```{r Graphic echo=FALSE [PROBABILITIY OF AUTOTOMY]}
 
 emm <- emm %>%
   mutate(leg = recode(leg,
@@ -617,7 +618,7 @@ ggsave(here("outputs","figures","Fig_3.png"), plot = Fig_3, width = 10, height =
 
 ```
 
-```{r echo=FALSE}
+```{r Graphic echo=FALSE [PROBABILITIY OF AUTOTOMY]}
 
 Fig_32 = ggplot(emm, aes(x = factor(leg), y = prob, color = population, shape = population)) +
   geom_errorbar(
@@ -664,14 +665,18 @@ ggsave(here("outputs","figures","Fig_3v2.png"), plot = Fig_32, width = 10, heigh
 
 ```
 
-
-The results indicate that autotomy differs across populations. However, this pattern may be driven by the 2009 population having a higher number of individuals that autotomized two or more legs. Therefore, we also tested whether the proportion of individuals exhibiting autotomy differed among populations using a GLM.
+The results indicate that autotomy differs across populations. We used a pairwise comparison to identify which populations differed. However, this pattern may be driven by the 2009 population having a higher number of individuals that autotomized two or more legs. Therefore, we also tested whether the proportion of individuals exhibiting autotomy differed among populations using a GLM.
 
 ```{r}
+pairs(emmeans(m_final, ~ population, type = "response"))
 
-ma <- (glm(autotomized ~ population, 
+
+ma <- glm(autotomized ~ population, 
          family = binomial, 
-         data = data_raw))
+         data = data_raw)
+
+summary(ma)
+
 anova(ma, test = "Chisq")
 
 ```
