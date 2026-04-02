@@ -88,6 +88,11 @@ library(ggpattern)
 library(grid)
 library(cowplot)
 
+df_n <- data.frame(
+  population = c("2002", "2009", "2011", "2012", 'Total'),
+  n = c("n=380", "n=485", "n=208", "n=332", "n=1405")
+)
+
 # FIG 2A ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 df_individuals <- data_raw %>%
@@ -104,7 +109,7 @@ df_individuals_total <- data_raw %>%
   mutate(population = c("Total", "Total"), .before = 1) %>%
   ungroup()
 
-df_individuals <- bind_rows(df_individuals, df_individuals_total)
+df_individuals <- bind_rows(df_individuals, df_individuals_total) 
 
 df_individuals$autotomized <- as.factor(df_individuals$autotomized)
 
@@ -112,11 +117,22 @@ df_individuals$autotomized <- as.factor(df_individuals$autotomized)
 
 df_autotomy <- df_long %>%
   group_by(population, autotomy) %>%
-  summarise(n = n(), .groups = "drop") %>%
+  summarise(n_aut = n(), .groups = "drop") %>%
   group_by(population) %>%
-  mutate(perc = n / sum(n))
+  mutate(perc = n_aut / sum(n_aut))%>%
+  ungroup()
+
+df_autotomy_total <- df_long %>%
+  group_by(autotomy) %>%
+  summarise(n_aut = n(), .groups = "drop") %>%
+  mutate(perc = n_aut / sum(n_aut))%>%
+  mutate(population = c("Total", "Total"), .before = 1) %>%
+  ungroup()
+
+df_autotomy <- bind_rows(df_autotomy, df_autotomy_total)
 
 df_autotomy$autotomy <- as.factor(df_autotomy$autotomy)
+
 
 # FIG 2C ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -154,7 +170,6 @@ df_total_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
 
 df_side <- bind_rows(df_side, df_total_side)
 
-
 ```
 
 
@@ -165,6 +180,11 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
+  geom_text(
+    data = df_n,
+    aes(x = population, y = 1, label = n),
+    inherit.aes = FALSE,
+    vjust = -0.5) +
   scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
                     labels = c("0" = "Non autotomized", "1" = "Autotomized")) +
   labs(
@@ -173,7 +193,7 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
     y = "Individuals (%)",
     fill = ""
   ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
@@ -191,15 +211,20 @@ Fig_2B = ggplot(df_autotomy, aes(x = population, y = perc, fill = autotomy)) +
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
+  geom_text(
+    data = df_n,
+    aes(x = population, y = 1, label = n),
+    inherit.aes = FALSE,
+    vjust = -0.5) +
   scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
                     labels = c("0" = "Intact", "1" = "Autotomized")) +
   labs(
-    title = "2A",
+    title = "2B",
     x = "Year",
     y = "Legs (%)",
     fill = ""
   ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
@@ -216,7 +241,12 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
            color = "black",
-           width = 0.7) + 
+           width = 0.7) +
+  geom_text(
+    data = df_n,
+    aes(x = population, y = 1, label = n),
+    inherit.aes = FALSE,
+    vjust = -0.5) +
   scale_fill_manual(values = c("right"="lightgray","left"="gray30"),
                     labels = c("right" = "Right", "left" = "Left")) +
   geom_hline(yintercept = 0.5,
@@ -227,7 +257,7 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
        x = "Year",
        y = "Autotomys (%)",
        fill = "") +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
@@ -242,14 +272,32 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
 
 # puting the figures together
 
+leg_A <- get_legend(Fig_2A + theme (legend.justification = "left",
+  legend.margin = margin(0, 0, 0, 0)))
+leg_B <- get_legend(Fig_2B + theme (legend.justification = "left",
+  legend.margin = margin(0, 0, 0, 0)))
+leg_C <- get_legend(Fig_2C + theme (legend.justification = "left",
+  legend.margin = margin(0, 0, 0, 0)))
+ 
+
+Fig_2A_noleg <- Fig_2A + theme(legend.position = "none")
+Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
+Fig_2C_noleg <- Fig_2C + theme(legend.position = "none")
+
+row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
+row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
+row_C <- plot_grid(Fig_2C_noleg, leg_C, rel_widths = c(1, 0.32))
+
 x_label <- ggdraw() +
   draw_label("Year", size = 16)
 
+
 Fig2 <- plot_grid(
-  Fig_2A, 
-  Fig_2B,
-  Fig_2C,
-  ncol = 1
+  row_A,
+  row_B,
+  row_C,
+  ncol = 1,
+  align = "v"
 )
 
 Fig_2 <- plot_grid(
@@ -436,7 +484,7 @@ emm <- as.data.frame(emm)
 ```
 
 
-```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE [PROBABILITIY OF AUTOTOMY points]}
+```{r Graphic in construction, delivery forecast:10/04/2026 echo=FALSE [PROBABILITIY OF AUTOTOMY]}
 
 emm <- emm %>%
   mutate(leg = recode(leg,
