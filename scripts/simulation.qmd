@@ -1,0 +1,168 @@
+---
+title: "02 - Simulation"
+subtitle: "02_simulation.qmd"
+format: 
+  html:
+    embed-resources: true
+bibliography: ../references.bib
+eval: true
+warning: false
+knitr:
+  opts_chunk: 
+    message: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# Overview
+
+To test our hypothesis that (1) the loss of one leg reduces the probability of losing the homologous leg of the same pair; and (2) the loss of one ambulatory leg reduces the probability of losing another ambulatory leg located on the same side of the body, we employed a Monte Carlo approach. In this approach, we randomized the observed data to generate a null distribution in which the events of interest occur purely by chance. We then compared the observed frequencies in our collected data to those expected under this null model. If the observed frequencies do not differ from the null expectations, this suggests that the patterns arise from random processes. Conversely, significant deviations from the null distribution indicate that additional factors may be influencing the occurrence of these events. 
+
+
+# The hypothesis
+
+First we established the test statistic, which is the event of interest for each hypothesis.
+
+# Hypothesis 1: how many times an entire pair of legs was lost.
+
+```{r}
+
+leg1 <- sum(data_raw$r1 == 1 & data_raw$l1 == 1)
+leg2 <- sum(data_raw$r2 == 1 & data_raw$l2 == 1)
+leg3 <- sum(data_raw$r3 == 1 & data_raw$l3 == 1)
+leg4 <- sum(data_raw$r4 == 1 & data_raw$l4 == 1)
+
+```
+
+
+# Hypothesis 2: how many time legs were lost in the same side of the body
+* in this hypothesis we are taking into account only the ambulatory legs
+* because we do not have the temporal sequence in which the legs were lost, we are also not considering cases in which 3 legs were lost because this inevitabelly would count as a assymetrical lost even if is wasn't the case
+
+```{r}
+
+sideR <- sum(rowSums(data_raw[, c("r1", "r3", "r4")] == 1) == 2)
+sideL <- sum(rowSums(data_raw[, c("X1e", "X3e", "X4e")] == 1) == 2)
+side <- sideR + sideL
+
+```
+
+
+# Null simulation
+
+Because of the results in the GLMMs, we decides to fix the proportion each population and each 
+
+```{r}
+
+```
+
+sim.par1 <- numeric(simulations)
+sim.par2 <- numeric(simulations)
+sim.par3 <- numeric(simulations)
+sim.par4 <- numeric(simulations)
+sim.ladoDE <- numeric(simulations)
+
+
+# Neste modelo nulo, mantemos fixos:
+# - o número de perdas por indivíduo (linhas)
+# - a frequência de amputação por tipo de perna (colunas)
+# Ou seja, usamos fixedmar = "both".
+
+sim.par1_1 <- numeric(simulations)
+sim.par2_1 <- numeric(simulations)
+sim.par3_1 <- numeric(simulations)
+sim.par4_1 <- numeric(simulations)
+sim.ladoDE_1 <- numeric(simulations)
+
+nulo1 <- permatfull(dataframe, fixedmar = "both", times = simulations)
+
+for (i in seq_len(simulations)) {
+  
+  df.nulo1 <- as.data.frame(nulo1$perm[[i]])
+  
+  nulo.par1 <- sum(df.nulo1$X1d == 1 & df.nulo1$X1e == 1)
+  nulo.par2 <- sum(df.nulo1$X2d == 1 & df.nulo1$X2e == 1)
+  nulo.par3 <- sum(df.nulo1$X3d == 1 & df.nulo1$X3e == 1)
+  nulo.par4 <- sum(df.nulo1$X4d == 1 & df.nulo1$X4e == 1)
+  
+  sim.par1_1[i] <- nulo.par1
+  sim.par2_1[i] <- nulo.par2
+  sim.par3_1[i] <- nulo.par3
+  sim.par4_1[i] <- nulo.par4
+  
+  nulo.ladoD <- sum(rowSums(df.nulo1[, c("X1d", "X3d", "X4d")] == 1) == 2)
+  nulo.ladoE <- sum(rowSums(df.nulo1[, c("X1e", "X3e", "X4e")] == 1) == 2)
+  
+  sim.ladoDE_1[i] <- nulo.ladoD + nulo.ladoE
+}
+
+# p valores
+
+p_par1_1 <- (sum(sim.par1_1 <= par1) + 1) / (length(sim.par1_1) + 1)
+p_par2_1 <- (sum(sim.par2_1 <= par2) + 1) / (length(sim.par2_1) + 1)
+p_par3_1 <- (sum(sim.par3_1 <= par3) + 1) / (length(sim.par3_1) + 1)
+p_par4_1 <- (sum(sim.par4_1 <= par4) + 1) / (length(sim.par4_1) + 1)
+p_ladoDE_1 <- (sum(sim.ladoDE_1 <= ladoDE) + 1) / (length(sim.ladoDE_1) + 1)
+
+p_par1_1
+p_par2_1
+p_par3_1
+p_par4_1
+p_ladoDE_1
+
+# 6. Fazendo gráficos que mostram a frequência das estatísticas do teste e onde se encontra o valor real observado
+
+dados_plot <- bind_rows(
+  
+  data.frame(sim = sim.par1, perna = "PAR1", modelo = "Modelo 1"),
+  data.frame(sim = sim.par1_1, perna = "PAR1", modelo = "Modelo 2"),
+  
+  data.frame(sim = sim.par2, perna = "PAR2", modelo = "Modelo 1"),
+  data.frame(sim = sim.par2_1, perna = "PAR2", modelo = "Modelo 2"),
+  
+  data.frame(sim = sim.par3, perna = "PAR3", modelo = "Modelo 1"),
+  data.frame(sim = sim.par3_1, perna = "PAR3", modelo = "Modelo 2"),
+  
+  data.frame(sim = sim.par4, perna = "PAR4", modelo = "Modelo 1"),
+  data.frame(sim = sim.par4_1, perna = "PAR4", modelo = "Modelo 2")
+)
+
+observados <- data.frame(
+  perna = c("PAR1","PAR2","PAR3","PAR4"),
+  valor = c(par1, par2, par3, par4)
+)
+
+ggplot(dados_plot, aes(x = sim, fill = modelo)) +
+  
+  geom_histogram(
+    aes(y = after_stat(density)),
+    position = "identity",
+    alpha = 0.5,
+    binwidth = 1,
+    color = "black"
+  ) +
+  
+  geom_vline(
+    data = observados,
+    aes(xintercept = valor),
+    color = "#d7301f",
+    linewidth = 1.2
+  ) +
+  
+  facet_wrap(~perna, ncol = 2) +
+  
+  scale_fill_manual(values = c("#bdbdbd", "#3182bd")) +
+  
+  labs(
+    title = "Distribuições nulas das perdas por par de pernas",
+    x = "Número de eventos",
+    y = "Densidade",
+    fill = "Modelo nulo"
+  ) +
+  
+  theme_classic(base_size = 14)
+
+
+
+
+
