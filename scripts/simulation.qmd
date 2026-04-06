@@ -139,20 +139,15 @@ for (s in 1:simulations) {
 
   df <- bind_rows(df_list)
 
-  null_leg1 <- sum(df$V1 == 1 & df$V5 == 1)
-  null_leg2 <- sum(df$V2 == 1 & df$V6 == 1)
-  null_leg3 <- sum(df$V3 == 1 & df$V7 == 1)
-  null_leg4 <- sum(df$V4 == 1 & df$V8 == 1)
   
-  sim.leg1[s] <- null_leg1
-  sim.leg2[s] <- null_leg2
-  sim.leg3[s] <- null_leg3
-  sim.leg4[s] <- null_leg4
+  sim.leg1[s] <- sum(df$V1 == 1 & df$V5 == 1)
+  sim.leg2[s] <- sum(df$V2 == 1 & df$V6 == 1)
+  sim.leg3[s] <- sum(df$V3 == 1 & df$V7 == 1)
+  sim.leg4[s] <- sum(df$V4 == 1 & df$V8 == 1)
   
   sideR_null <- sum(rowSums(df[, c("V1", "V3", "V4")] == 1) == 2)
   sideL_null <- sum(rowSums(df[, c("V5", "V7", "V8")] == 1) == 2)
-  null_side <- sideR_null + sideL_null
-  sim.side[s] <- null_side
+  sim.side[s] <- sideR_null + sideL_null
   
 }
 
