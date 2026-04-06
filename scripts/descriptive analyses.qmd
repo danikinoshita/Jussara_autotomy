@@ -68,12 +68,13 @@ summary(df_long[,2:ncol(df_long)])
 ```
 
 ```{r resuming the data - not necessary, just checking some infos, include=FALSE}
-df_long %>% filter(population == "MC", autotomy == 0) %>% nrow()  #3538
+df_long %>% filter(population == "MC") %>% nrow()  #3538
 df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
 (3538+342)/8 # 485 (id number in MC)
 342/3880 # 0.088 percentage of autotomy in MC population
 # data_raw = 1141 individuals, each with 8 legs, so total rows in df_long should be
-1141*8 # = 9128 (df_long)
+
+data_raw %>% filter(population == "2012") %>% nrow()
 
 # I think the upper comment refers to the old data that was already updated, but now 
 # we have 1405 individuals, so the total rows in df_long should be 1405*8 = 11240, which is correct.

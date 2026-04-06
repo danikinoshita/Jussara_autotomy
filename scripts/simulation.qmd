@@ -65,6 +65,11 @@ leg4 <- sum(data_raw$r4 == 1 & data_raw$l4 == 1)
 
 ```
 
+The observed data was:
+leg 1: 9
+leg 2: 23
+leg 3: 4
+leg 4: 6
 
 # Hypothesis 2: how many time legs were lost in the same side of the body
 * in this hypothesis we are taking into account only the ambulatory legs
@@ -78,12 +83,13 @@ side <- sideR + sideL
 
 ```
 
+The observed data was:
+30 (16 left and 14 right)
 
 # Null simulation
 
 ```{r}
-
-simulations = 10
+simulations = 1000
 
 sim.leg1 <- numeric(simulations)
 sim.leg2 <- numeric(simulations)
@@ -93,39 +99,64 @@ sim.side <- numeric(simulations)
 
 ```
 
+Because of the results in the GLMMs, we decided to fix the proportion each population and each leg according to the previous results of the estimated marginal probabilities.
 
-Because of the results in the GLMMs, we decided to fix the proportion each population and each leg
-
-# Neste modelo nulo, mantemos fixos:
-# - o número de perdas por indivíduo (linhas)
-# - a frequência de amputação por tipo de perna (colunas)
-# Ou seja, usamos fixedmar = "both".
 
 ```{r}
 
-null <- permatfull(data_raw, fixedmar = "both", times = simulations)
+map <- readRDS(here("data", "processed", "marginal_autotomy_probabilities.rds"))
 
-for (i in seq_len(simulations)) {
+df <- as.data.frame(matrix(data = 0, nrow = nrow(data_raw), ncol = 8))
+
+df_split <- split(df, data_raw$population)
+total_split <- split(data_raw$total, data_raw$population)
+
+for (s in 1:simulations) {
+
+  df_list <- list()
+
+  for (year in names(df_split)) {
+
+    df_sub <- df_split[[year]]
+    total_sub <- total_split[[year]]
+
+    probs_pop <-  map$prob[map$population == year]
+    probs_pop <- c(probs_pop, probs_pop)
+
+    rows <- lapply(seq_len(nrow(df_sub)), function(i) {
+      row <- rep(0, ncol(df_sub))
+      pos <- sample(seq_along(probs_pop),
+                    size = total_sub[i],
+                    prob = probs_pop,
+                    replace = FALSE)
+      row[pos] <- 1
+      row
+    })
+
+    df_sub[,] <- do.call(rbind, rows)
+    df_list[[year]] <- df_sub
+  }
+
+  df <- bind_rows(df_list)
+
+  null_leg1 <- sum(df$V1 == 1 & df$V5 == 1)
+  null_leg2 <- sum(df$V2 == 1 & df$V6 == 1)
+  null_leg3 <- sum(df$V3 == 1 & df$V7 == 1)
+  null_leg4 <- sum(df$V4 == 1 & df$V8 == 1)
   
-  df.null <- as.data.frame(nulo1$perm[[i]])
+  sim.leg1[s] <- null_leg1
+  sim.leg2[s] <- null_leg2
+  sim.leg3[s] <- null_leg3
+  sim.leg4[s] <- null_leg4
   
-  null_leg1 <- sum(df.null$r1 == 1 & df.null$l1 == 1)
-  null_leg2 <- sum(df.null$r2 == 1 & df.null$l2 == 1)
-  null_leg3 <- sum(df.null$r3 == 1 & df.null$l3 == 1)
-  null_leg4 <- sum(df.null$r4 == 1 & df.null$l4 == 1)
+  sideR_null <- sum(rowSums(df[, c("V1", "V3", "V4")] == 1) == 2)
+  sideL_null <- sum(rowSums(df[, c("V5", "V7", "V8")] == 1) == 2)
+  null_side <- sideR_null + sideL_null
+  sim.side[s] <- null_side
   
-  sim.leg1[i] <- null_leg1
-  sim.leg2[i] <- null_leg2
-  sim.leg3[i] <- null_leg3
-  sim.leg4[i] <- null_leg4
-  
-  sideR_null <- sum(rowSums(df.null[, c("r1", "r3", "r4")] == 1) == 2)
-  sideL_null <- sum(rowSums(df.null[, c("l1", "l3", "l4")] == 1) == 2)
-  sim.side <- sideR_null + sideL_null
 }
 
 ```
-
 
 # P-values
 
@@ -133,68 +164,39 @@ To calculate the p-values using this method, we calculate how frequent it is to 
 
 ```{r}
 
-p_leg1 <- (sum(sim.par1_1 <= par1) + 1) / (length(sim.par1_1) + 1)
-p_leg2 <- (sum(sim.par2_1 <= par2) + 1) / (length(sim.par2_1) + 1)
-p_leg3 <- (sum(sim.par3_1 <= par3) + 1) / (length(sim.par3_1) + 1)
-p_leg4 <- (sum(sim.par4_1 <= par4) + 1) / (length(sim.par4_1) + 1)
-p_ladoDE_1 <- (sum(sim.ladoDE_1 <= ladoDE) + 1) / (length(sim.ladoDE_1) + 1)
+p_leg1 <- (sum(sim.leg1 <= leg1) + 1) / (length(sim.leg1) + 1)
+p_leg2 <- (sum(sim.leg2 <= leg2) + 1) / (length(sim.leg2) + 1)
+p_leg3 <- (sum(sim.leg3 <= leg3) + 1) / (length(sim.leg3) + 1)
+p_leg4 <- (sum(sim.leg4 <= leg4) + 1) / (length(sim.leg4) + 1)
+p_side <- (sum(sim.side <= side) + 1) / (length(sim.side) + 1)
+
+p_leg1
+p_leg2
+p_leg3
+p_leg4
+p_side
 
 ```
 
 
-# 6. Fazendo gráficos que mostram a frequência das estatísticas do teste e onde se encontra o valor real observado
+```{r include = FALSE}
 
-dados_plot <- bind_rows(
-  
-  data.frame(sim = sim.par1, perna = "PAR1", modelo = "Modelo 1"),
-  data.frame(sim = sim.par1_1, perna = "PAR1", modelo = "Modelo 2"),
-  
-  data.frame(sim = sim.par2, perna = "PAR2", modelo = "Modelo 1"),
-  data.frame(sim = sim.par2_1, perna = "PAR2", modelo = "Modelo 2"),
-  
-  data.frame(sim = sim.par3, perna = "PAR3", modelo = "Modelo 1"),
-  data.frame(sim = sim.par3_1, perna = "PAR3", modelo = "Modelo 2"),
-  
-  data.frame(sim = sim.par4, perna = "PAR4", modelo = "Modelo 1"),
-  data.frame(sim = sim.par4_1, perna = "PAR4", modelo = "Modelo 2")
-)
+hist(sim.leg1, main = "Null distribution - Leg 1")
+abline(v = leg1, lwd = 2)
 
-observados <- data.frame(
-  perna = c("PAR1","PAR2","PAR3","PAR4"),
-  valor = c(par1, par2, par3, par4)
-)
+hist(sim.leg2, main = "Null distribution - Leg 2",breaks = 40)
+abline(v = leg2, lwd = 2)
 
-ggplot(dados_plot, aes(x = sim, fill = modelo)) +
-  
-  geom_histogram(
-    aes(y = after_stat(density)),
-    position = "identity",
-    alpha = 0.5,
-    binwidth = 1,
-    color = "black"
-  ) +
-  
-  geom_vline(
-    data = observados,
-    aes(xintercept = valor),
-    color = "#d7301f",
-    linewidth = 1.2
-  ) +
-  
-  facet_wrap(~perna, ncol = 2) +
-  
-  scale_fill_manual(values = c("#bdbdbd", "#3182bd")) +
-  
-  labs(
-    title = "Distribuições nulas das perdas por par de pernas",
-    x = "Número de eventos",
-    y = "Densidade",
-    fill = "Modelo nulo"
-  ) +
-  
-  theme_classic(base_size = 14)
+hist(sim.leg3, main = "Null distribution - Leg 3",breaks = 10)
+abline(v = leg3, lwd = 2)
 
+hist(sim.leg4, main = "Null distribution - Leg 4", breaks = 20)
+abline(v = leg4, lwd = 2)
 
+hist(sim.side, main = "Null distribution - side", breaks = 20)
+abline(v = side, lwd = 2)
+
+```
 
 
 
