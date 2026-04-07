@@ -77,7 +77,7 @@ side <- sideR + sideL
 
 ```
 
-The observed data was:
+In the observed data was:
 30 (16 left and 14 right)
 
 # Null simulation construction
@@ -160,7 +160,6 @@ for (s in 1:simulations) {
 ```
 
 
-
 # P-values
 
 To calculate the p-values using this method, we calculate how frequent was to find the observed results in the simulations.
@@ -178,6 +177,13 @@ p_leg2
 p_leg3
 p_leg4
 p_side
+
+mean(sim.leg1)
+mean(sim.leg2)
+mean(sim.leg3)
+mean(sim.leg4)
+
+mean(sim.side)
 
 ```
 
@@ -201,19 +207,6 @@ hist(sim.side, main = "Null distribution - side", breaks = 20)
 abline(v = side, lwd = 2)
 
 ```
-
-
-```{r include=FALSE}
-
-mean(sim.leg1)
-mean(sim.leg2)
-mean(sim.leg3)
-mean(sim.leg4)
-
-mean(sim.side)
-
-```
-
 
 ```{r trying to make graphics include=FALSE}
 
