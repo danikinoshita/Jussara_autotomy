@@ -26,8 +26,6 @@ library(glmmTMB)
 library(DHARMa)
 library(emmeans)
 library(ggplot2)
-# library(ggpattern)
-# library(grid)
 library(cowplot)
 library(patchwork)
 ```
