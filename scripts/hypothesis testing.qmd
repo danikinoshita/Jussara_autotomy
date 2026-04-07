@@ -204,7 +204,7 @@ mean_side <- mean(sim.side)
 
 These results indicate that the observed data is not a rare when the events of interest occur purely by chance, suggesting that the patterns found arise from random processes.
 
-```{r histogram for the suplementar material include=FALSE}
+```{r histogram for the suplementar material echo=FALSE}
 
 fig_leg1 = ggplot(data.frame(sim = sim.leg1), aes(x = sim)) +
   geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
@@ -229,7 +229,7 @@ fig_leg2 = ggplot(data.frame(sim = sim.leg2), aes(x = sim)) +
            label = "Observed",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Null distribuition for leg I",
+  labs(title = "Null distribuition for leg II",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 14)
@@ -243,7 +243,7 @@ fig_leg3 = ggplot(data.frame(sim = sim.leg3), aes(x = sim)) +
            label = "Observed",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Null distribuition for leg I",
+  labs(title = "Null distribuition for leg III",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 14)
@@ -257,7 +257,7 @@ fig_leg4 = ggplot(data.frame(sim = sim.leg4), aes(x = sim)) +
            label = "Observed",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Null distribuition for leg I",
+  labs(title = "Null distribuition for leg IV",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 14)
@@ -271,7 +271,7 @@ fig_side = ggplot(data.frame(sim = sim.side), aes(x = sim)) +
            label = "Observed",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Null distribuition for leg I",
+  labs(title = "Null distribuition for side",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 14)
