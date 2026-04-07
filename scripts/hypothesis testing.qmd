@@ -159,6 +159,13 @@ for (s in 1:simulations) {
 
 ```
 
+```{r include = FALSE}
+saveRDS(sim.leg1, file = here("data","processed","sim_leg1.rds"))
+saveRDS(sim.leg2, file = here("data","processed","sim_leg2.rds"))
+saveRDS(sim.leg3, file = here("data","processed","sim_leg3.rds"))
+saveRDS(sim.leg4, file = here("data","processed","sim_leg4.rds"))
+saveRDS(sim.side, file = here("data","processed","sim_side.rds"))
+```
 
 # P-values
 
@@ -178,12 +185,21 @@ p_leg3
 p_leg4
 p_side
 
-mean(sim.leg1)
-mean(sim.leg2)
-mean(sim.leg3)
-mean(sim.leg4)
+# calculating the mean of the simulations
+mean_leg1 <- mean(sim.leg1)
+mean_leg2 <- mean(sim.leg2)
+mean_leg3 <- mean(sim.leg3)
+mean_leg4 <- mean(sim.leg4)
+mean_side <- mean(sim.side)
 
-mean(sim.side)
+simulation_results <- data.frame(
+  leg = c("leg1", "leg2", "leg3", "leg4", "side"),
+  mean = c(mean_leg1, mean_leg2, mean_leg3, mean_leg4, mean_side),
+  p_value = c(p_leg1, p_leg2, p_leg3, p_leg4, p_side)
+)
+
+# saveRDS(simulation_results, file = here("data","processed","simulation results.rds"))
+
 
 ```
 
