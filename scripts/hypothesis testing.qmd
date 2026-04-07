@@ -192,35 +192,96 @@ mean_leg3 <- mean(sim.leg3)
 mean_leg4 <- mean(sim.leg4)
 mean_side <- mean(sim.side)
 
-simulation_results <- data.frame(
-  leg = c("leg1", "leg2", "leg3", "leg4", "side"),
-  mean = c(mean_leg1, mean_leg2, mean_leg3, mean_leg4, mean_side),
-  p_value = c(p_leg1, p_leg2, p_leg3, p_leg4, p_side)
-)
+# simulation_results <- data.frame(
+#  leg = c("leg1", "leg2", "leg3", "leg4", "side"),
+#  mean = c(mean_leg1, mean_leg2, mean_leg3, mean_leg4, mean_side),
+#  p_value = c(p_leg1, p_leg2, p_leg3, p_leg4, p_side)
+#)
 
 # saveRDS(simulation_results, file = here("data","processed","simulation results.rds"))
-
 
 ```
 
 These results indicate that the observed data is not a rare when the events of interest occur purely by chance, suggesting that the patterns found arise from random processes.
 
-```{r include=FALSE}
+```{r histogram for the suplementar material include=FALSE}
 
-hist(sim.leg1, main = "Null distribution - Leg 1")
-abline(v = leg1, lwd = 2)
+fig_leg1 = ggplot(data.frame(sim = sim.leg1), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg1, color = "#d7301f", linewidth = 1.3) +
+  annotate("text",
+           x = leg1,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg I",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.leg2, main = "Null distribution - Leg 2",breaks = 40)
-abline(v = leg2, lwd = 2)
+fig_leg2 = ggplot(data.frame(sim = sim.leg2), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg2, color = "#d7301f", linewidth = 1.3) +
+  annotate("text",
+           x = leg2,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg I",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.leg3, main = "Null distribution - Leg 3",breaks = 10)
-abline(v = leg3, lwd = 2)
+fig_leg3 = ggplot(data.frame(sim = sim.leg3), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg3, color = "#d7301f", linewidth = 1.3) +
+  annotate("text",
+           x = leg3,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg I",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.leg4, main = "Null distribution - Leg 4", breaks = 20)
-abline(v = leg4, lwd = 2)
+fig_leg4 = ggplot(data.frame(sim = sim.leg4), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg4, color = "#d7301f", linewidth = 1.3) +
+  annotate("text",
+           x = leg4,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg I",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.side, main = "Null distribution - side", breaks = 20)
-abline(v = side, lwd = 2)
+fig_side = ggplot(data.frame(sim = sim.side), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = side, color = "#d7301f", linewidth = 1.3) +
+  annotate("text",
+           x = side,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg I",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
+
+ggsave(here("outputs","supp","null_leg1.png"), plot=fig_leg1, width=10, height=7)
+ggsave(here("outputs","supp","null_leg2.png"), plot=fig_leg2, width=10, height=7)
+ggsave(here("outputs","supp","null_leg3.png"), plot=fig_leg3, width=10, height=7)
+ggsave(here("outputs","supp","null_leg4.png"), plot=fig_leg4, width=10, height=7)
+ggsave(here("outputs","supp","null_side.png"), plot=fig_side, width=10, height=7)
+
 
 ```
 
