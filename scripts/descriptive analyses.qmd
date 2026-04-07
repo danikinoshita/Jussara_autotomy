@@ -25,6 +25,11 @@ library(tidyr)
 library(glmmTMB)
 library(DHARMa)
 library(emmeans)
+library(ggplot2)
+# library(ggpattern)
+# library(grid)
+# library(cowplot)
+library(patchwork)
 ```
 
 The `data_raw` dataset contains the raw data on autotomy for *Jussara sp.* collected by different collectors across four years (2002, 2009, 2011, and 2012). Each row corresponds to an individual, and the columns include information on the population (collector), leg type (r1, r2, r3, r4 for right legs and l1, l2, l3, l4 for left legs), and whether autotomy occurred (0 or 1). The data is already temporally organized and each collector is associated with a different year (TG = 2002, MC = 2009, GE = 2011 and GP = 2012).
@@ -81,20 +86,13 @@ data_raw %>% filter(population == "2012") %>% nrow()
 length(unique(data_raw$id))
 ```
 
-
 ```{r Creating data frames for the grafics echo=FALSE}
-
-library(ggplot2)
-library(ggpattern)
-library(grid)
-library(cowplot)
-
 df_n <- data.frame(
   population = c("2002", "2009", "2011", "2012", 'Total'),
-  n = c("n=380", "n=485", "n=208", "n=332", "n=1405")
+  n = c("n = 380", "n = 485", "n = 208", "n = 332", "n = 1405")
 )
 
-# FIG 2A ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+# FIG 2A - % autotomized individuals per population
 
 df_individuals <- data_raw %>%
   group_by(population, autotomized) %>%
@@ -114,7 +112,7 @@ df_individuals <- bind_rows(df_individuals, df_individuals_total)
 
 df_individuals$autotomized <- as.factor(df_individuals$autotomized)
 
-# FIG 2B ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+# FIG 2B - % autotomized legs per population
 
 df_autotomy <- df_long %>%
   group_by(population, autotomy) %>%
@@ -135,7 +133,7 @@ df_autotomy <- bind_rows(df_autotomy, df_autotomy_total)
 df_autotomy$autotomy <- as.factor(df_autotomy$autotomy)
 
 
-# FIG 2C ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+# FIG 2C % autotomy per body side per population
 
 df_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
   group_by(population) %>%
@@ -170,11 +168,10 @@ df_total_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
   ungroup() 
 
 df_side <- bind_rows(df_side, df_total_side)
-
 ```
 
 ```{r Figure 2 echo=FALSE}
-
+# Fig 2a
 Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = autotomized)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
@@ -188,7 +185,7 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
   scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
                     labels = c("0" = "Non autotomized", "1" = "Autotomized")) +
   labs(
-    title = "2A",
+    # title = "2A",
     x = "Year",
     y = "Individuals (%)",
     fill = ""
@@ -197,29 +194,35 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
-    axis.title = element_text(size = 16),
-    axis.text = element_text(size = 14),
+    # axis.title = element_text(size = 16),
+    # axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 16),
+    axis.text.y = element_text(size = 12),
     legend.text = element_text(size = 14),
     axis.line = element_line(color = "black"),
     axis.title.x = element_blank(),
+    axis.text.x = element_blank(), # added to remove years from the bottom
     legend.position = "right"
-  )
+  ) + 
+  annotate("text", x = Inf, y = Inf, label = "A",
+           hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
+# Fig 2b
 ### Check!!!!
 Fig_2B = ggplot(df_autotomy, aes(x = population, y = perc, fill = autotomy)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
-  geom_text(
-    data = df_n,
-    aes(x = population, y = 1, label = n),
-    inherit.aes = FALSE,
-    vjust = -0.5) +
+  # geom_text(
+  #   data = df_n,
+  #   aes(x = population, y = 1, label = n),
+  #   inherit.aes = FALSE,
+  #   vjust = -0.5) +
   scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
                     labels = c("0" = "Intact", "1" = "Autotomized")) +
   labs(
-    title = "2B",
+    # title = "2B",
     x = "Year",
     y = "Legs (%)",
     fill = ""
@@ -228,13 +231,18 @@ Fig_2B = ggplot(df_autotomy, aes(x = population, y = perc, fill = autotomy)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
-    axis.title = element_text(size = 16),
-    axis.text = element_text(size = 14),
+    # axis.title = element_text(size = 16),
+    # axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 16),
+    axis.text.y = element_text(size = 12),
     legend.text = element_text(size = 14),
     axis.line = element_line(color = "black"),
     axis.title.x = element_blank(),
+    axis.text.x = element_blank(), # added to remove years from the bottom
     legend.position = "right"
-  )
+  ) + 
+  annotate("text", x = Inf, y = Inf, label = "B",
+           hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
 
 Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
@@ -242,76 +250,78 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
-  geom_text(
-    data = df_n,
-    aes(x = population, y = 1, label = n),
-    inherit.aes = FALSE,
-    vjust = -0.5) +
+  # geom_text(
+  #   data = df_n,
+  #   aes(x = population, y = 1, label = n),
+  #   inherit.aes = FALSE,
+  #   vjust = -0.5) +
   scale_fill_manual(values = c("left"="lightgray","right"="gray30"),
                     labels = c("left" = "Left", "right" = "Right")) +
   geom_hline(yintercept = 0.5,
              linetype = "dashed",
              color = "black",
              linewidth = 0.8) +
-  labs(title = "2C",
-       x = "Year",
-       y = "Autotomys (%)",
-       fill = "") +
+  labs(
+    # title = "2C",
+    x = "Year",
+    y = "Autotomies (%)",
+    fill = ""
+    ) +
   scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
     axis.title = element_text(size = 16),
-    axis.text = element_text(size = 14),
+    axis.text = element_text(size = 12),
     legend.text = element_text(size = 14),
     axis.line = element_line(color = "black"),
     axis.title.x = element_blank(),
     legend.position = "right"
-  )
-
+  ) + 
+  annotate("text", x = Inf, y = Inf, label = "C",
+           hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
 # puting the figures together
 
-leg_A <- get_legend(Fig_2A + theme (legend.justification = "left",
-  legend.margin = margin(0, 0, 0, 0)))
-leg_B <- get_legend(Fig_2B + theme (legend.justification = "left",
-  legend.margin = margin(0, 0, 0, 0)))
-leg_C <- get_legend(Fig_2C + theme (legend.justification = "left",
-  legend.margin = margin(0, 0, 0, 0)))
+# leg_A <- get_legend(Fig_2A + theme (legend.justification = "left",
+#   legend.margin = margin(0, 0, 0, 0)))
+# leg_B <- get_legend(Fig_2B + theme (legend.justification = "left",
+#   legend.margin = margin(0, 0, 0, 0)))
+# leg_C <- get_legend(Fig_2C + theme (legend.justification = "left",
+#   legend.margin = margin(0, 0, 0, 0)))
  
+# Fig_2A_noleg <- Fig_2A + theme(legend.position = "none")
+# Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
+# Fig_2C_noleg <- Fig_2C + theme(legend.position = "none")
+# 
+# row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
+# row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
+# row_C <- plot_grid(Fig_2C_noleg, leg_C, rel_widths = c(1, 0.32))
+# 
+# x_label <- ggdraw() +
+#   draw_label("Year", size = 16)
+# 
+# 
+# Fig2 <- plot_grid(
+#   row_A,
+#   row_B,
+#   row_C,
+#   ncol = 1,
+#   align = "v"
+# )
+# 
+# Fig_2 <- plot_grid(
+#   Fig2,
+#   x_label,
+#   ncol = 1,
+#   rel_heights = c(1, 0.1)
+# ) +
+#   theme(plot.background = element_rect(fill = "white", color = NA))
 
-Fig_2A_noleg <- Fig_2A + theme(legend.position = "none")
-Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
-Fig_2C_noleg <- Fig_2C + theme(legend.position = "none")
+Fig2 <- Fig_2A / Fig_2B / Fig_2C 
 
-row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
-row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
-row_C <- plot_grid(Fig_2C_noleg, leg_C, rel_widths = c(1, 0.32))
-
-x_label <- ggdraw() +
-  draw_label("Year", size = 16)
-
-
-Fig2 <- plot_grid(
-  row_A,
-  row_B,
-  row_C,
-  ncol = 1,
-  align = "v"
-)
-
-Fig_2 <- plot_grid(
-  Fig2,
-  x_label,
-  ncol = 1,
-  rel_heights = c(1, 0.1)
-) +
-  theme(plot.background = element_rect(fill = "white", color = NA))
-
-ggsave(here("outputs","figures","Fig_2.png"), plot = Fig_2, width = 8, height = 12)
-
+ggsave(here("outputs","figures","Fig_2.png"), plot = Fig2, width = 9, height = 12)
 ```
-
 
 # GLMMs for autotomy
 
@@ -620,8 +630,14 @@ ggsave(here("outputs","figures","Fig_3.png"), plot = Fig_3, width = 10, height =
 ```
 
 ```{r Graphic echo=FALSE [PROBABILITIY OF AUTOTOMY]}
-
-Fig_32 = ggplot(emm, aes(x = factor(leg), y = prob, color = population, shape = population)) +
+Fig_32 = ggplot(emm, 
+                aes(
+                  x = factor(leg), 
+                  y = prob, 
+                  # shape = population,
+                  color = population
+                  )
+                ) +
   geom_errorbar(
     aes(ymin = asymp.LCL, ymax = asymp.UCL),
     width = 0,
@@ -634,8 +650,7 @@ Fig_32 = ggplot(emm, aes(x = factor(leg), y = prob, color = population, shape = 
   ) +
   scale_color_manual(values = c(
     "#4E79A7", "#F28E2B", "#E15759", "#76B7B2"))+
-  scale_shape_manual(values = c(
-    16, 15, 8, 17))+
+  # scale_shape_manual(values = c(16, 15, 8, 17))+
   scale_y_continuous(
     limits = c(0, 0.2),
     breaks = seq(0, 0.2, by = 0.05),
@@ -660,10 +675,7 @@ Fig_32 = ggplot(emm, aes(x = factor(leg), y = prob, color = population, shape = 
     legend.position = "right"
   )
 
-
-
 ggsave(here("outputs","figures","Fig_3v2.png"), plot = Fig_32, width = 10, height = 7)
-
 ```
 
 The results indicate that autotomy differs across populations. We used a pairwise comparison to identify which populations differed. However, this pattern may be driven by the 2009 population having a higher number of individuals that autotomized two or more legs. Therefore, we also tested whether the proportion of individuals exhibiting autotomy differed among populations using a GLM.
@@ -678,7 +690,6 @@ ma <- glm(autotomized ~ population,
 
 summary(ma)
 anova(ma, test = "Chisq")
-
 ```
 
 ```{r save emm}
