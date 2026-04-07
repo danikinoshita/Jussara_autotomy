@@ -16,16 +16,13 @@ editor_options:
 
 # Overview
 
-In this document, we test our hypothesis that (1) the loss of one leg reduces the probability of losing the homologous leg of the same pair; and (2) the loss of one ambulatory leg reduces the probability of losing another ambulatory leg located on the same side of the body, we employed a Monte Carlo approach. In this approach, we randomized the observed data to generate a null distribution in which the events of interest occur purely by chance. We then compared the observed frequencies in our collected data to those expected under this null model. If the observed frequencies do not differ from the null expectations, this suggests that the patterns arise from random processes. Conversely, significant deviations from the null distribution indicate that additional factors may be influencing the occurrence of these events. 
+In this document, we test our hypotheses that (1) the loss of one leg reduces the probability of losing the homologous leg of the same pair; and (2) the loss of one ambulatory leg reduces the probability of losing another ambulatory leg located on the same side of the body, we employed a Monte Carlo approach. In this approach, we randomized the observed data to generate a null distribution in which the events of interest occur purely by chance. We then compared the observed frequencies in our collected data to those expected under this null model. If the observed frequencies do not differ from the null expectations, this suggests that the patterns arise from random processes. Conversely, significant deviations from the null distribution indicate that additional factors may be influencing the occurrence of these events. 
 
 ```{r calling Rpackages}
-
 library(here)
 library(dplyr)
 library(tidyr)
-
 ```
-
 
 ```{r importing the data}
 data_raw <- read.table(here("data","raw","data.tsv"), header = T, stringsAsFactors = T, sep='\t')
@@ -44,45 +41,43 @@ data_raw <- data_raw %>%
   ))
 ```
 
-# The hypothesis
+# The hypotheses
 
 First we established the test statistic, which is the event of interest for each hypothesis.
 
 # Hypothesis 1: how many times the entire pair of legs was lost.
 
 ```{r}
-
 leg1 <- sum(data_raw$r1 == 1 & data_raw$l1 == 1)
 leg2 <- sum(data_raw$r2 == 1 & data_raw$l2 == 1)
 leg3 <- sum(data_raw$r3 == 1 & data_raw$l3 == 1)
 leg4 <- sum(data_raw$r4 == 1 & data_raw$l4 == 1)
-
 ```
 
-In the observed data was:
-leg 1: 9
-leg 2: 23
-leg 3: 4
-leg 4: 6
+The observed data was:
+- leg 1: 9
+- leg 2: 23
+- leg 3: 4
+- leg 4: 6
 
 # Hypothesis 2: how many time legs were lost in the same side of the body
-* in this hypothesis we are taking into account only the ambulatory legs (I, III, IV)
-* because we do not have the temporal sequence in which the legs were lost, we are also not considering cases in which 3 legs were lost because this inevitably would count as a asymmetrical lost even if the first legs lost were in oposite sides of the body
+
+*Note: in this hypothesis we are taking into account only the ambulatory legs (I, III, IV).*
+
+*Note: because we do not have the temporal sequence in which the legs were lost, we are also not considering cases in which 3 legs were lost because this inevitably would count as a asymmetrical lost even if the first legs lost were in opposite sides of the body.*
 
 ```{r}
-
 sideR <- sum(rowSums(data_raw[, c("r1", "r3", "r4")] == 1) == 2)
 sideL <- sum(rowSums(data_raw[, c("l1", "l3", "l4")] == 1) == 2)
 side <- sideR + sideL
-
 ```
 
-In the observed data was:
-30 (16 left and 14 right)
+The observed data was:
+- 30 (16 left and 14 right)
 
 # Null simulation construction
 
-We create vectors in which the test statistics of each simulation are going to be deposited to further compare with the observed data
+We create vectors in which the test statistics of each simulation are going to be deposited to further compare with the observed data.
 
 ```{r}
 simulations = 10000
@@ -92,42 +87,42 @@ sim.leg2 <- numeric(simulations)
 sim.leg3 <- numeric(simulations)
 sim.leg4 <- numeric(simulations)
 sim.side <- numeric(simulations)
-
 ```
 
 Because the GLMMs from the previous descriptive analyses demonstrated that there are differences between legs and years, we decided to fix the probability of losing each leg according to the previously estimated marginal probabilities and decided to run the simulation separately for each year. We also maintained the number of legs lost per individual, randomizing only which legs were lost.
 
 ```{r}
-
 # importing the estimated marginal probabilities
 map <- readRDS(here("data", "processed", "marginal_autotomy_probabilities.rds"))
 
 # creating a data frame for the simulation
-df <- as.data.frame(matrix(data = 0, nrow = nrow(data_raw), ncol = 8))
+leg_names <- c("r1", "r2", "r3", "r4", "l1", "l2", "l3", "l4")
+df <- as.data.frame(matrix(0, nrow = nrow(data_raw), ncol = 8))
+colnames(df) <- leg_names
 
 # spliting the data frame for each year (population)
 df_split <- split(df, data_raw$population)
 
 # spliting the total in the data_raw for each year (population)
 total_split <- split(data_raw$total, data_raw$population)
-
 ```
 
 ```{r}
+set.seed (42)
 
 for (s in 1:simulations) {
 
   df_list <- list()
   
-# randomizing the data separately for each year (population) 
+  # randomizing the data separately for each year (population) 
   for (year in names(df_split)) {
-
+    
     df_year <- df_split[[year]]
     total_year <- total_split[[year]]
-
+    
     probs <-  map$prob[map$population == year]
     probs <- c(probs, probs)
-
+    
     rows <- lapply(seq_len(nrow(df_year)), function(i) {
       row <- rep(0, ncol(df_year))
       pos <- sample(seq_along(probs),
@@ -135,9 +130,10 @@ for (s in 1:simulations) {
                     prob = probs,
                     replace = FALSE)
       row[pos] <- 1
-      row
+      
+      return(row)
     })
-
+    
     df_year[,] <- do.call(rbind, rows)
     df_list[[year]] <- df_year
   }
@@ -146,26 +142,25 @@ for (s in 1:simulations) {
   df <- bind_rows(df_list)
 
 # calculating the test statistics in the null data frame (df)
-  sim.leg1[s] <- sum(df$V1 == 1 & df$V5 == 1)
-  sim.leg2[s] <- sum(df$V2 == 1 & df$V6 == 1)
-  sim.leg3[s] <- sum(df$V3 == 1 & df$V7 == 1)
-  sim.leg4[s] <- sum(df$V4 == 1 & df$V8 == 1)
+  sim.leg1[s] <- sum(df$r1 == 1 & df$l1 == 1)
+  sim.leg2[s] <- sum(df$r2 == 1 & df$l2 == 1)
+  sim.leg3[s] <- sum(df$r3 == 1 & df$l3 == 1)
+  sim.leg4[s] <- sum(df$r4 == 1 & df$l4 == 1)
   
-  sideR_null <- sum(rowSums(df[, c("V1", "V3", "V4")] == 1) == 2)
-  sideL_null <- sum(rowSums(df[, c("V5", "V7", "V8")] == 1) == 2)
+  sideR_null <- sum(rowSums(df[, c("r1", "r3", "r4")] == 1) == 2)
+  sideL_null <- sum(rowSums(df[, c("l1", "l3", "l4")] == 1) == 2)
   sim.side[s] <- sideR_null + sideL_null
   
 }
 
+beepr::beep(6)
 ```
-
 
 # P-values
 
 To calculate the p-values using this method, we calculate how frequent was to find the observed results in the simulations.
 
 ```{r}
-
 p_leg1 <- (sum(sim.leg1 <= leg1) + 1) / (length(sim.leg1) + 1)
 p_leg2 <- (sum(sim.leg2 <= leg2) + 1) / (length(sim.leg2) + 1)
 p_leg3 <- (sum(sim.leg3 <= leg3) + 1) / (length(sim.leg3) + 1)
@@ -184,10 +179,9 @@ mean(sim.leg3)
 mean(sim.leg4)
 
 mean(sim.side)
-
 ```
 
-These results indicate that the observed data is not a rare when the events of interest occur purely by chance, suggesting that the patterns found arise from random processes.
+These results indicate that the observed data is not rare when the events of interest occur purely by chance, suggesting that the patterns found arise from random processes.
 
 ```{r include=FALSE}
 
