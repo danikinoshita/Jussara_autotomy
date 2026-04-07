@@ -28,7 +28,7 @@ library(emmeans)
 library(ggplot2)
 # library(ggpattern)
 # library(grid)
-# library(cowplot)
+library(cowplot)
 library(patchwork)
 ```
 
@@ -84,6 +84,8 @@ data_raw %>% filter(population == "2012") %>% nrow()
 # I think the upper comment refers to the old data that was already updated, but now 
 # we have 1405 individuals, so the total rows in df_long should be 1405*8 = 11240, which is correct.
 length(unique(data_raw$id))
+
+
 ```
 
 ```{r Creating data frames for the grafics echo=FALSE}
@@ -133,7 +135,7 @@ df_autotomy <- bind_rows(df_autotomy, df_autotomy_total)
 df_autotomy$autotomy <- as.factor(df_autotomy$autotomy)
 
 
-# FIG 2C % autotomy per body side per population
+# FIG 2C - % autotomy per body side per population
 
 df_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
   group_by(population) %>%
@@ -185,7 +187,6 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
   scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
                     labels = c("0" = "Non autotomized", "1" = "Autotomized")) +
   labs(
-    # title = "2A",
     x = "Year",
     y = "Individuals (%)",
     fill = ""
@@ -194,35 +195,26 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
-    # axis.title = element_text(size = 16),
-    # axis.text = element_text(size = 14),
     axis.title.y = element_text(size = 16),
     axis.text.y = element_text(size = 12),
     legend.text = element_text(size = 14),
     axis.line = element_line(color = "black"),
     axis.title.x = element_blank(),
-    axis.text.x = element_blank(), # added to remove years from the bottom
+    axis.text.x = element_blank(), 
     legend.position = "right"
   ) + 
   annotate("text", x = Inf, y = Inf, label = "A",
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
 # Fig 2b
-### Check!!!!
 Fig_2B = ggplot(df_autotomy, aes(x = population, y = perc, fill = autotomy)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
-  # geom_text(
-  #   data = df_n,
-  #   aes(x = population, y = 1, label = n),
-  #   inherit.aes = FALSE,
-  #   vjust = -0.5) +
   scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
                     labels = c("0" = "Intact", "1" = "Autotomized")) +
   labs(
-    # title = "2B",
     x = "Year",
     y = "Legs (%)",
     fill = ""
@@ -231,30 +223,23 @@ Fig_2B = ggplot(df_autotomy, aes(x = population, y = perc, fill = autotomy)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
-    # axis.title = element_text(size = 16),
-    # axis.text = element_text(size = 14),
     axis.title.y = element_text(size = 16),
     axis.text.y = element_text(size = 12),
     legend.text = element_text(size = 14),
     axis.line = element_line(color = "black"),
     axis.title.x = element_blank(),
-    axis.text.x = element_blank(), # added to remove years from the bottom
+    axis.text.x = element_blank(), 
     legend.position = "right"
   ) + 
   annotate("text", x = Inf, y = Inf, label = "B",
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
-
+# Fig 2c
 Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
-  # geom_text(
-  #   data = df_n,
-  #   aes(x = population, y = 1, label = n),
-  #   inherit.aes = FALSE,
-  #   vjust = -0.5) +
   scale_fill_manual(values = c("left"="lightgray","right"="gray30"),
                     labels = c("left" = "Left", "right" = "Right")) +
   geom_hline(yintercept = 0.5,
@@ -262,7 +247,6 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
              color = "black",
              linewidth = 0.8) +
   labs(
-    # title = "2C",
     x = "Year",
     y = "Autotomies (%)",
     fill = ""
@@ -272,7 +256,8 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
   theme(
     panel.grid = element_blank(),
     axis.title = element_text(size = 16),
-    axis.text = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 16),
     legend.text = element_text(size = 14),
     axis.line = element_line(color = "black"),
     axis.title.x = element_blank(),
@@ -281,44 +266,24 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
   annotate("text", x = Inf, y = Inf, label = "C",
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
-# puting the figures together
+# combining the figures into a single panel and aligning the legend
 
-# leg_A <- get_legend(Fig_2A + theme (legend.justification = "left",
-#   legend.margin = margin(0, 0, 0, 0)))
-# leg_B <- get_legend(Fig_2B + theme (legend.justification = "left",
-#   legend.margin = margin(0, 0, 0, 0)))
-# leg_C <- get_legend(Fig_2C + theme (legend.justification = "left",
-#   legend.margin = margin(0, 0, 0, 0)))
+leg_A <- get_legend(Fig_2A + theme (legend.justification = "left",
+legend.margin = margin(0, 0, 0, 0)))
+leg_B <- get_legend(Fig_2B + theme (legend.justification = "left",
+legend.margin = margin(0, 0, 0, 0)))
+leg_C <- get_legend(Fig_2C + theme (legend.justification = "left",
+legend.margin = margin(0, 0, 0, 0)))
  
-# Fig_2A_noleg <- Fig_2A + theme(legend.position = "none")
-# Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
-# Fig_2C_noleg <- Fig_2C + theme(legend.position = "none")
-# 
-# row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
-# row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
-# row_C <- plot_grid(Fig_2C_noleg, leg_C, rel_widths = c(1, 0.32))
-# 
-# x_label <- ggdraw() +
-#   draw_label("Year", size = 16)
-# 
-# 
-# Fig2 <- plot_grid(
-#   row_A,
-#   row_B,
-#   row_C,
-#   ncol = 1,
-#   align = "v"
-# )
-# 
-# Fig_2 <- plot_grid(
-#   Fig2,
-#   x_label,
-#   ncol = 1,
-#   rel_heights = c(1, 0.1)
-# ) +
-#   theme(plot.background = element_rect(fill = "white", color = NA))
+Fig_2A_noleg <- Fig_2A + theme(legend.position = "none")
+Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
+Fig_2C_noleg <- Fig_2C + theme(legend.position = "none")
 
-Fig2 <- Fig_2A / Fig_2B / Fig_2C 
+row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
+row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
+row_C <- plot_grid(Fig_2C_noleg, leg_C, rel_widths = c(1, 0.32))
+
+Fig2 <- row_A / row_B / row_C 
 
 ggsave(here("outputs","figures","Fig_2.png"), plot = Fig2, width = 9, height = 12)
 ```
@@ -495,7 +460,7 @@ emm <- as.data.frame(emm)
 ```
 
 ```{r Graphic echo=FALSE [PROBABILITIY OF AUTOTOMY]}
-Fig_32 = ggplot(emm, 
+Fig_3 = ggplot(emm, 
                 aes(
                   x = factor(leg), 
                   y = prob, 
@@ -522,7 +487,7 @@ Fig_32 = ggplot(emm,
     expand = c(0, 0)
   ) +
   labs(
-    shape = "Year",
+    #shape = "Year",
     color = "Year",
     title = "",
     x = "Leg",
@@ -540,7 +505,7 @@ Fig_32 = ggplot(emm,
     legend.position = "right"
   )
 
-ggsave(here("outputs","figures","Fig_3v2.png"), plot = Fig_32, width = 10, height = 7)
+ggsave(here("outputs","figures","Fig_3.png"), plot = Fig_3, width = 10, height = 7)
 ```
 
 The results indicate that autotomy differs across populations. We used a pairwise comparison to identify which populations differed. However, this pattern may be driven by the 2009 population having a higher number of individuals that autotomized two or more legs. Therefore, we also tested whether the proportion of individuals exhibiting autotomy differed among populations using a GLM.
