@@ -16,12 +16,14 @@ editor_options:
 
 # Overview
 
-In this document, we test our hypotheses that (1) the loss of one leg reduces the probability of losing the homologous leg of the same pair; and (2) the loss of one ambulatory leg reduces the probability of losing another ambulatory leg located on the same side of the body, we employed a Monte Carlo approach. In this approach, we randomized the observed data to generate a null distribution in which the events of interest occur purely by chance. We then compared the observed frequencies in our collected data to those expected under this null model. If the observed frequencies do not differ from the null expectations, this suggests that the patterns arise from random processes. Conversely, significant deviations from the null distribution indicate that additional factors may be influencing the occurrence of these events. 
+In this document, we test our hypotheses that (1) the loss of one leg reduces the probability of losing the homologous leg of the same pair; and (2) the loss of one ambulatory leg reduces the probability of losing another ambulatory leg located on the same side of the body, we employed a Monte Carlo approach. In this approach, we randomized the observed data to generate a null distribution in which the events of interest occur purely by chance. We then compared the observed frequencies in our collected data to those expected under this null model. If the observed frequencies do not differ from the null expectations, this suggests that the patterns arise from random processes. Conversely, significant deviations from the null distribution indicate that additional factors may be influencing the occurrence of these events.
 
 ```{r calling Rpackages}
 library(here)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
+library(patchwork)
 ```
 
 ```{r importing the data}
@@ -45,7 +47,7 @@ data_raw <- data_raw %>%
 
 First we established the test statistic, which is the event of interest for each hypothesis.
 
-# Hypothesis 1: how many times the entire pair of legs was lost.
+## Hypothesis 1: how many times the entire pair of legs was lost.
 
 ```{r}
 leg1 <- sum(data_raw$r1 == 1 & data_raw$l1 == 1)
@@ -55,12 +57,16 @@ leg4 <- sum(data_raw$r4 == 1 & data_raw$l4 == 1)
 ```
 
 The observed data was:
-- leg 1: 9
-- leg 2: 23
-- leg 3: 4
-- leg 4: 6
 
-# Hypothesis 2: how many time legs were lost in the same side of the body
+-   leg 1: 9
+
+-   leg 2: 23
+
+-   leg 3: 4
+
+-   leg 4: 6
+
+## Hypothesis 2: how many time legs were lost in the same side of the body
 
 *Note: in this hypothesis we are taking into account only the ambulatory legs (I, III, IV).*
 
@@ -73,7 +79,8 @@ side <- sideR + sideL
 ```
 
 The observed data was:
-- 30 (16 left and 14 right)
+
+-   30 (16 left and 14 right)
 
 # Null simulation construction
 
@@ -107,7 +114,7 @@ df_split <- split(df, data_raw$population)
 total_split <- split(data_raw$total, data_raw$population)
 ```
 
-```{r}
+```{r eval=FALSE}
 set.seed (42)
 
 for (s in 1:simulations) {
@@ -156,6 +163,22 @@ for (s in 1:simulations) {
 beepr::beep(6)
 ```
 
+```{r eval = FALSE}
+saveRDS(sim.leg1, file = here("data","processed","sim_leg1.rds"))
+saveRDS(sim.leg2, file = here("data","processed","sim_leg2.rds"))
+saveRDS(sim.leg3, file = here("data","processed","sim_leg3.rds"))
+saveRDS(sim.leg4, file = here("data","processed","sim_leg4.rds"))
+saveRDS(sim.side, file = here("data","processed","sim_side.rds"))
+```
+
+```{r include=FALSE}
+sim.leg1 <- readRDS(file = here("data","processed","sim_leg1.rds"))
+sim.leg2 <- readRDS(file = here("data","processed","sim_leg2.rds"))
+sim.leg3 <- readRDS(file = here("data","processed","sim_leg3.rds"))
+sim.leg4 <- readRDS(file = here("data","processed","sim_leg4.rds"))
+sim.side <- readRDS(file = here("data","processed","sim_side.rds"))
+```
+
 # P-values
 
 To calculate the p-values using this method, we calculate how frequent was to find the observed results in the simulations.
@@ -167,43 +190,134 @@ p_leg3 <- (sum(sim.leg3 <= leg3) + 1) / (length(sim.leg3) + 1)
 p_leg4 <- (sum(sim.leg4 <= leg4) + 1) / (length(sim.leg4) + 1)
 p_side <- (sum(sim.side <= side) + 1) / (length(sim.side) + 1)
 
-p_leg1
-p_leg2
-p_leg3
-p_leg4
-p_side
+# calculating the mean of the simulations
+mean_leg1 <- mean(sim.leg1)
+mean_leg2 <- mean(sim.leg2)
+mean_leg3 <- mean(sim.leg3)
+mean_leg4 <- mean(sim.leg4)
+mean_side <- mean(sim.side)
 
-mean(sim.leg1)
-mean(sim.leg2)
-mean(sim.leg3)
-mean(sim.leg4)
+# quantiles
+q1 <- quantile(sim.leg1, probs = c(0.025, 0.975))
+q2 <- quantile(sim.leg2, probs = c(0.025, 0.975))
+q3 <- quantile(sim.leg3, probs = c(0.025, 0.975))
+q4 <- quantile(sim.leg4, probs = c(0.025, 0.975))
+qside <- quantile(sim.side, probs = c(0.025, 0.975))
+```
 
-mean(sim.side)
+```{r}
+simulation_results <- data.frame(
+ leg = c("leg1", "leg2", "leg3", "leg4", "side"),
+ mean = round(c(mean_leg1, mean_leg2, mean_leg3, mean_leg4, mean_side),2),
+ Q2.5 = c(q1[1], q2[1], q3[1], q4[1], qside[1]),
+ Q97.5 = c(q1[2], q2[2], q3[2], q4[2], qside[2]),
+ p_value = round(c(p_leg1, p_leg2, p_leg3, p_leg4, p_side),3)
+)
+
+simulation_results
+```
+
+```{r eval=FALSE}
+saveRDS(simulation_results, file = here("data","processed","simulation_results.rds"))
 ```
 
 These results indicate that the observed data is not rare when the events of interest occur purely by chance, suggesting that the patterns found arise from random processes.
 
-```{r include=FALSE}
+```{r histogram for the suplementar material, echo=FALSE}
+fig_leg1 = ggplot(data.frame(sim = sim.leg1), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg1, color = "#d7301f", linewidth = 1.3) +
+  geom_vline(xintercept = simulation_results$Q2.5[simulation_results$leg == "leg1"], color = "black", linewidth = 1, lty = 2) +
+  geom_vline(xintercept = simulation_results$Q97.5[simulation_results$leg == "leg1"], color = "black", linewidth = 1, lty = 2) +
+  annotate("text",
+           x = leg1,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg I",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.leg1, main = "Null distribution - Leg 1")
-abline(v = leg1, lwd = 2)
+fig_leg2 = ggplot(data.frame(sim = sim.leg2), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg2, color = "#d7301f", linewidth = 1.3) +
+  geom_vline(xintercept = simulation_results$Q2.5[simulation_results$leg == "leg2"], color = "black", linewidth = 1, lty = 2) +
+  geom_vline(xintercept = simulation_results$Q97.5[simulation_results$leg == "leg2"], color = "black", linewidth = 1, lty = 2) +
+  annotate("text",
+           x = leg2,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg II",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.leg2, main = "Null distribution - Leg 2",breaks = 40)
-abline(v = leg2, lwd = 2)
+fig_leg3 = ggplot(data.frame(sim = sim.leg3), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg3, color = "#d7301f", linewidth = 1.3) +
+  geom_vline(xintercept = simulation_results$Q2.5[simulation_results$leg == "leg3"], color = "black", linewidth = 1, lty = 2) +
+  geom_vline(xintercept = simulation_results$Q97.5[simulation_results$leg == "leg3"], color = "black", linewidth = 1, lty = 2) +
+  annotate("text",
+           x = leg3,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg III",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.leg3, main = "Null distribution - Leg 3",breaks = 10)
-abline(v = leg3, lwd = 2)
+fig_leg4 = ggplot(data.frame(sim = sim.leg4), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = leg4, color = "#d7301f", linewidth = 1.3) +
+  geom_vline(xintercept = simulation_results$Q2.5[simulation_results$leg == "leg4"], color = "black", linewidth = 1, lty = 2) +
+  geom_vline(xintercept = simulation_results$Q97.5[simulation_results$leg == "leg4"], color = "black", linewidth = 1, lty = 2) +
+  annotate("text",
+           x = leg4,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for leg IV",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 
-hist(sim.leg4, main = "Null distribution - Leg 4", breaks = 20)
-abline(v = leg4, lwd = 2)
-
-hist(sim.side, main = "Null distribution - side", breaks = 20)
-abline(v = side, lwd = 2)
-
+fig_side = ggplot(data.frame(sim = sim.side), aes(x = sim)) +
+  geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "black") +
+  geom_vline(xintercept = side, color = "#d7301f", linewidth = 1.3) +
+  geom_vline(xintercept = simulation_results$Q2.5[simulation_results$leg == "side"], color = "black", linewidth = 1, lty = 2) +
+  geom_vline(xintercept = simulation_results$Q97.5[simulation_results$leg == "side"], color = "black", linewidth = 1, lty = 2) +
+  annotate("text",
+           x = side,
+           y = Inf,
+           label = "Observed",
+           vjust = 1.5,
+           color = "#d7301f") +
+  labs(title = "Null distribuition for side",
+       x = "Number of events",
+       y = "Frequency") +
+  theme_classic(base_size = 14)
 ```
 
-```{r trying to make graphics include=FALSE}
+```{r echo=FALSE, fig.height=10}
+(fig_leg1 | fig_leg2) / (fig_leg3 | fig_leg4) / fig_side
+```
 
+```{r eval=FALSE}
+ggsave(here("outputs","supp","null_leg1.png"), plot=fig_leg1, width=10, height=7)
+ggsave(here("outputs","supp","null_leg2.png"), plot=fig_leg2, width=10, height=7)
+ggsave(here("outputs","supp","null_leg3.png"), plot=fig_leg3, width=10, height=7)
+ggsave(here("outputs","supp","null_leg4.png"), plot=fig_leg4, width=10, height=7)
+ggsave(here("outputs","supp","null_side.png"), plot=fig_side, width=10, height=7)
+```
+
+```{r trying to make graphics, include=FALSE, eval=FALSE}
 no_leg1 <- sum(!(data_raw$r1 == 1 & data_raw$l1 == 1) & data_raw$total >=1)
 no_leg2 <- sum(!(data_raw$r2 == 1 & data_raw$l2 == 1) & data_raw$total >=1)
 no_leg3 <- sum(!(data_raw$r3 == 1 & data_raw$l3 == 1) & data_raw$total >=1)
@@ -212,10 +326,4 @@ no_leg4 <- sum(!(data_raw$r4 == 1 & data_raw$l4 == 1) & data_raw$total >=1)
 no_sideR <- sum(!(rowSums(data_raw[, c("r1", "r3", "r4")] == 1) == 2))
 no_sideL <- sum(!(rowSums(data_raw[, c("l1", "l3", "l4")] == 1) == 2))
 no_side <- no_sideR + no_sideL
-
 ```
-
-
-
-
-
