@@ -190,10 +190,10 @@ Fig_2A = ggplot(df_graphic, aes(x = population, y = perc_ind_pop, fill = total))
     axis.text.x = element_blank(), 
     legend.position = "right"
   ) + 
-  annotate("text", x = Inf, y = Inf, label = "B",
+  annotate("text", x = Inf, y = Inf, label = "A",
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
-# Fig 2c
+# Fig 2b
 Fig_2B = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
@@ -227,7 +227,7 @@ Fig_2B = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
     axis.title.x = element_blank(),
     legend.position = "right"
   ) + 
-  annotate("text", x = Inf, y = Inf, label = "C",
+  annotate("text", x = Inf, y = Inf, label = "B",
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
 # combining the figures into a single panel and aligning the legend
