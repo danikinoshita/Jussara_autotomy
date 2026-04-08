@@ -52,6 +52,8 @@ data_raw <- data_raw %>%
     "GE" = "2011",
     "GP" = "2012"
   ))
+
+
 ```
 
 ```{r transforming into a long table}
@@ -72,12 +74,12 @@ summary(df_long[,2:ncol(df_long)])
 
 ```{r resuming the data - not necessary, just checking some infos, include=FALSE}
 df_long %>% filter(population == "MC") %>% nrow()  #3538
-df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
+df_long %>% filter(population == "2012", autotomy == 1) %>% nrow() #342
 (3538+342)/8 # 485 (id number in MC)
 342/3880 # 0.088 percentage of autotomy in MC population
 # data_raw = 1141 individuals, each with 8 legs, so total rows in df_long should be
-
-data_raw %>% filter(population == "2012") %>% nrow()
+df_long %>% filter(autotomy == 1) %>% nrow()
+data_raw %>% filter(autotomized == 1) %>% nrow()
 
 # I think the upper comment refers to the old data that was already updated, but now 
 # we have 1405 individuals, so the total rows in df_long should be 1405*8 = 11240, which is correct.
@@ -89,7 +91,9 @@ length(unique(data_raw$id))
 ```{r Creating data frames for the grafics echo=FALSE}
 df_n <- data.frame(
   population = c("2002", "2009", "2011", "2012", 'Total'),
-  n = c("n = 380", "n = 485", "n = 208", "n = 332", "n = 1405")
+  n = c("n = 380", "n = 485", "n = 208", "n = 332", "n = 1405"),
+  na = c("n = 159", "n = 221", "n = 102", "n = 123", "n = 605"),
+  a = c("n = 206", "n = 342", "n = 132", "n = 157", "n = 837")
 )
 
 # FIG 2A - % autotomized individuals per population
@@ -112,25 +116,33 @@ df_individuals <- bind_rows(df_individuals, df_individuals_total)
 
 df_individuals$autotomized <- as.factor(df_individuals$autotomized)
 
+
 # FIG 2B - % autotomized legs per population
 
-df_autotomy <- df_long %>%
-  group_by(population, autotomy) %>%
-  summarise(n_aut = n(), .groups = "drop") %>%
+df_graphic <- data_raw %>%
+  filter(autotomized == 1) %>%
+  group_by(population, total) %>%
+  summarise (n_individuos = n(), .groups = "drop") %>%
   group_by(population) %>%
-  mutate(perc = n_aut / sum(n_aut))%>%
+  mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
   ungroup()
+df_graphic$total <- as.factor(df_graphic$total)
 
-df_autotomy_total <- df_long %>%
-  group_by(autotomy) %>%
-  summarise(n_aut = n(), .groups = "drop") %>%
-  mutate(perc = n_aut / sum(n_aut))%>%
-  mutate(population = c("Total", "Total"), .before = 1) %>%
-  ungroup()
+df_graphic_total <- data_raw %>%
+  filter(autotomized == 1) %>%
+  group_by(total) %>%
+  summarise (n_individuos = n(), .groups = "drop") %>%
+  mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
+  ungroup() %>%
+  mutate(population = c("Total", "Total", "Total","Total"), .before = 1)
+df_graphic_total$total <- as.factor(df_graphic_total$total)
 
-df_autotomy <- bind_rows(df_autotomy, df_autotomy_total)
+df_graphic <- bind_rows(df_graphic, df_graphic_total)
 
-df_autotomy$autotomy <- as.factor(df_autotomy$autotomy)
+sequence <- unique(df_graphic$population)
+df_graphic <- df_graphic %>%
+  mutate(population = factor(population, levels = sequence))%>%
+  arrange(population, total)
 
 
 # FIG 2C - % autotomy per body side per population
@@ -185,7 +197,7 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
   scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
                     labels = c("0" = "Non autotomized", "1" = "Autotomized")) +
   labs(
-    x = "Year",
+    x = "",
     y = "Individuals (%)",
     fill = ""
   ) +
@@ -205,19 +217,24 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
 # Fig 2b
-Fig_2B = ggplot(df_autotomy, aes(x = population, y = perc, fill = autotomy)) +
+Fig_2B = ggplot(df_graphic, aes(x = population, y = perc_ind_pop, fill = total)) +
   geom_bar(stat = "identity",
-           position = position_stack(reverse = FALSE),
+           position = position_stack(reverse = TRUE),
            color = "black",
            width = 0.7) +
-  scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
-                    labels = c("0" = "Intact", "1" = "Autotomized")) +
+  geom_text(
+    data = df_n,
+    aes(x = population, y = 1, label = na),
+    inherit.aes = FALSE,
+    vjust = -0.5) +
+  scale_fill_manual(values = c("1"="gray10","2"="gray40","3"="gray70","4"="gray90"),
+                    labels = c("1"="1 Leg","2"="2 Legs","3"="3 Legs","4"="4 Legs")) +
   labs(
-    x = "Year",
-    y = "Legs (%)",
+    x = "",
+    y = "Autotomized individuals (%)",
     fill = ""
   ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
+ scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
@@ -238,6 +255,11 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
+   geom_text(
+    data = df_n,
+    aes(x = population, y = 1, label = a),
+    inherit.aes = FALSE,
+    vjust = -0.5) +
   scale_fill_manual(values = c("left"="lightgray","right"="gray30"),
                     labels = c("left" = "Left", "right" = "Right")) +
   geom_hline(yintercept = 0.5,
@@ -245,7 +267,7 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
              color = "black",
              linewidth = 0.8) +
   labs(
-    x = "Year",
+    x = "",
     y = "Autotomies (%)",
     fill = ""
     ) +
