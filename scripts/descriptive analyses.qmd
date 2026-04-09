@@ -19,6 +19,7 @@ editor_options:
 In this document, we perform a descriptive analysis to investigate whether autotomy in *Jussara sp.* differs between leg types (I, II, III, or IV), side of the body (right or left) and populations (2002, 2009, 2011, 2012). We use generalized linear mixed models (GLMMs) to analyze the data, accounting for the repeated measures on individuals.
 
 ```{r calling Rpackages}
+
 library(here)
 library(dplyr)
 library(tidyr)
@@ -27,7 +28,7 @@ library(DHARMa)
 library(emmeans)
 library(ggplot2)
 library(cowplot)
-library(patchwork)
+
 ```
 
 The `data_raw` dataset contains the raw data on autotomy for *Jussara sp.* collected by different collectors across four years (2002, 2009, 2011, and 2012). Each row corresponds to an individual, and the columns include information on the population (collector), leg type (r1, r2, r3, r4 for right legs and l1, l2, l3, l4 for left legs), and whether autotomy occurred (0 or 1). The data is already temporally organized and each collector is associated with a different year (TG = 2002, MC = 2009, GE = 2011 and GP = 2012).
@@ -52,7 +53,6 @@ data_raw <- data_raw %>%
     "GE" = "2011",
     "GP" = "2012"
   ))
-
 
 ```
 
@@ -98,26 +98,26 @@ df_n <- data.frame(
 
 # FIG 2A - 
 
-df_graphic <- data_raw %>%
+df_autotomy <- data_raw %>%
   group_by(population, total) %>%
   summarise (n_individuos = n(), .groups = "drop") %>%
   group_by(population) %>%
   mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
   ungroup()
-df_graphic$total <- as.factor(df_graphic$total)
+df_autotomy$total <- as.factor(df_autotomy$total)
 
-df_graphic_total <- data_raw %>%
+df_autotomy_total <- data_raw %>%
   group_by(total) %>%
   summarise (n_individuos = n(), .groups = "drop") %>%
   mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
   ungroup() %>%
   mutate(population = c("Total", "Total", "Total","Total", "Total"), .before = 1)
-df_graphic_total$total <- as.factor(df_graphic_total$total)
+df_autotomy_total$total <- as.factor(df_autotomy_total$total)
 
-df_graphic <- bind_rows(df_graphic, df_graphic_total)
+df_autotomy <- bind_rows(df_autotomy, df_autotomy_total)
 
-sequence <- unique(df_graphic$population)
-df_graphic <- df_graphic %>%
+sequence <- unique(df_autotomy$population)
+df_autotomy <- df_autotomy %>%
   mutate(population = factor(population, levels = sequence))%>%
   arrange(population, total)
 
@@ -161,7 +161,7 @@ df_side <- bind_rows(df_side, df_total_side)
 
 ```{r Figure 2 echo=FALSE}
 # Fig 2a
-Fig_2A = ggplot(df_graphic, aes(x = population, y = perc_ind_pop, fill = total)) +
+Fig_2A = ggplot(df_autotomy, aes(x = population, y = perc_ind_pop, fill = total)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
            color = "black",
