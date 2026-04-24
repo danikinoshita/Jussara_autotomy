@@ -15,7 +15,7 @@ editor_options:
 ---
 
 # Overview
-
+ 
 In this document, we perform a descriptive analysis to investigate whether autotomy in *Jussara sp.* differs between leg types (I, II, III, or IV), side of the body (right or left) and populations (2002, 2009, 2011, 2012). We use generalized linear mixed models (GLMMs) to analyze the data, accounting for the repeated measures on individuals.
 
 ```{r calling Rpackages}
@@ -243,7 +243,18 @@ Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
 row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
 row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
 
+x_label <- ggdraw() +
+  draw_label("Year", x = 0.42, size = 16)
+
 Fig2 <- row_A / row_B
+
+Fig2 <- plot_grid(
+  Fig2,
+  x_label,
+  ncol = 1,
+  rel_heights = c(2, 0.1)
+) +
+  theme(plot.background = element_rect(fill = "white", color = NA))
 
 ggsave(here("outputs","figures","Fig_2.png"), plot = Fig2, width = 9, height = 12)
 ```
@@ -417,12 +428,17 @@ Estimated probabilities revealed a consistent pattern across populations, with l
 emm <- emmeans(m_final, ~ leg + population, type = "response")
 emm <- as.data.frame(emm)
 
+
 pairs(emmeans(m_final, ~ leg, type = "response"))
 pairs(emmeans(m_final, ~ population, type = "response"))
 
 ```
 
 ```{r Graphic echo=FALSE [PROBABILITIY OF AUTOTOMY]}
+emm$leg <- factor(emm$leg,
+                 levels = c(1, 2, 3, 4),
+                 labels = c("I", "II", "III", "IV"))
+
 Fig_3 = ggplot(emm, 
                 aes(
                   x = factor(leg), 
