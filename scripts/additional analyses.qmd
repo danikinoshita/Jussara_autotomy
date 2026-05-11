@@ -1,6 +1,6 @@
 ---
 title: "03 - Additional analysis"
-subtitle: "01_additional_analysis.qmd"
+subtitle: "03_additional_analysis.qmd"
 format: 
   html:
     embed-resources: true
@@ -15,12 +15,40 @@ editor_options:
 ---
 
 # Overview
- 
-```{r calling Rpackages}
 
+1- Leg size: in our discussion we
+2- Sex identified
+
+```{r calling Rpackages}
+library(here)
+library(dplyr)
+library(tidyr)
+library(glmmTMB)
+library(DHARMa)
+library(emmeans)
 ```
 
 ```{r importing the data}
 
+# plan 1
+data_leg <- read.table(here("data","raw","data_additional1.tsv"), header = T, stringsAsFactors = T, sep='\t')
+
+data_leg <- data_leg %>%
+  pivot_longer(cols=Leg.I:Leg.IV,
+               names_to = "legid",
+               values_to = "size")
+
+
+# plan 2
+data_sex <- read.table(here("data","raw","data_additional2.tsv"), header = T, stringsAsFactors = T, sep='\t')
+data_sex[is.na(data_sex)] <- 0
 ```
+
+
+# ANOVA for testing if legs have different size
+
+```{r}
+
+```
+
 
