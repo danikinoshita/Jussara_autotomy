@@ -85,7 +85,6 @@ data_raw %>% filter(autotomized == 1) %>% nrow()
 # we have 1405 individuals, so the total rows in df_long should be 1405*8 = 11240, which is correct.
 length(unique(data_raw$id))
 
-
 ```
 
 ```{r Creating data frames for the grafics echo=FALSE}
