@@ -15,10 +15,11 @@ editor_options:
 ---
 
 # Overview
-
+ 
 In this document, we perform a descriptive analysis to investigate whether autotomy in *Jussara sp.* differs between leg types (I, II, III, or IV), side of the body (right or left) and populations (2002, 2009, 2011, 2012). We use generalized linear mixed models (GLMMs) to analyze the data, accounting for the repeated measures on individuals.
 
 ```{r calling Rpackages}
+
 library(here)
 library(dplyr)
 library(tidyr)
@@ -27,7 +28,7 @@ library(DHARMa)
 library(emmeans)
 library(ggplot2)
 library(cowplot)
-library(patchwork)
+
 ```
 
 The `data_raw` dataset contains the raw data on autotomy for *Jussara sp.* collected by different collectors across four years (2002, 2009, 2011, and 2012). Each row corresponds to an individual, and the columns include information on the population (collector), leg type (r1, r2, r3, r4 for right legs and l1, l2, l3, l4 for left legs), and whether autotomy occurred (0 or 1). The data is already temporally organized and each collector is associated with a different year (TG = 2002, MC = 2009, GE = 2011 and GP = 2012).
@@ -52,6 +53,7 @@ data_raw <- data_raw %>%
     "GE" = "2011",
     "GP" = "2012"
   ))
+
 ```
 
 ```{r transforming into a long table}
@@ -72,12 +74,12 @@ summary(df_long[,2:ncol(df_long)])
 
 ```{r resuming the data - not necessary, just checking some infos, include=FALSE}
 df_long %>% filter(population == "MC") %>% nrow()  #3538
-df_long %>% filter(population == "MC", autotomy == 1) %>% nrow() #342
+df_long %>% filter(population == "2012", autotomy == 1) %>% nrow() #342
 (3538+342)/8 # 485 (id number in MC)
 342/3880 # 0.088 percentage of autotomy in MC population
 # data_raw = 1141 individuals, each with 8 legs, so total rows in df_long should be
-
-data_raw %>% filter(population == "2012") %>% nrow()
+df_long %>% filter(autotomy == 1) %>% nrow()
+data_raw %>% filter(autotomized == 1) %>% nrow()
 
 # I think the upper comment refers to the old data that was already updated, but now 
 # we have 1405 individuals, so the total rows in df_long should be 1405*8 = 11240, which is correct.
@@ -87,51 +89,38 @@ length(unique(data_raw$id))
 ```{r Creating data frames for the grafics, echo=FALSE}
 df_n <- data.frame(
   population = c("2002", "2009", "2011", "2012", 'Total'),
-  n = c("n = 380", "n = 485", "n = 208", "n = 332", "n = 1405")
+  n = c("n = 380", "n = 485", "n = 208", "n = 332", "n = 1405"),
+  na = c("n = 159", "n = 221", "n = 102", "n = 123", "n = 605"),
+  a = c("n = 206", "n = 342", "n = 132", "n = 157", "n = 837")
 )
 
-# FIG 2A - % autotomized individuals per population
+# FIG 2A - 
 
-df_individuals <- data_raw %>%
-  group_by(population, autotomized) %>%
+df_autotomy <- data_raw %>%
+  group_by(population, total) %>%
   summarise (n_individuos = n(), .groups = "drop") %>%
   group_by(population) %>%
   mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
   ungroup()
+df_autotomy$total <- as.factor(df_autotomy$total)
 
-df_individuals_total <- data_raw %>%
-  group_by(autotomized) %>%
-  summarise (n_individuos = n(), .groups = "drop") %>% 
+df_autotomy_total <- data_raw %>%
+  group_by(total) %>%
+  summarise (n_individuos = n(), .groups = "drop") %>%
   mutate(perc_ind_pop = n_individuos / sum(n_individuos)) %>%
-  mutate(population = c("Total", "Total"), .before = 1) %>%
-  ungroup()
-
-df_individuals <- bind_rows(df_individuals, df_individuals_total) 
-
-df_individuals$autotomized <- as.factor(df_individuals$autotomized)
-
-# FIG 2B - % autotomized legs per population
-
-df_autotomy <- df_long %>%
-  group_by(population, autotomy) %>%
-  summarise(n_aut = n(), .groups = "drop") %>%
-  group_by(population) %>%
-  mutate(perc = n_aut / sum(n_aut))%>%
-  ungroup()
-
-df_autotomy_total <- df_long %>%
-  group_by(autotomy) %>%
-  summarise(n_aut = n(), .groups = "drop") %>%
-  mutate(perc = n_aut / sum(n_aut))%>%
-  mutate(population = c("Total", "Total"), .before = 1) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(population = c("Total", "Total", "Total","Total", "Total"), .before = 1)
+df_autotomy_total$total <- as.factor(df_autotomy_total$total)
 
 df_autotomy <- bind_rows(df_autotomy, df_autotomy_total)
 
-df_autotomy$autotomy <- as.factor(df_autotomy$autotomy)
+sequence <- unique(df_autotomy$population)
+df_autotomy <- df_autotomy %>%
+  mutate(population = factor(population, levels = sequence))%>%
+  arrange(population, total)
 
 
-# FIG 2C - % autotomy per body side per population
+# FIG 2B - % autotomy per body side per population
 
 df_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
   group_by(population) %>%
@@ -170,7 +159,7 @@ df_side <- bind_rows(df_side, df_total_side)
 
 ```{r Figure 2, echo=FALSE}
 # Fig 2a
-Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = autotomized)) +
+Fig_2A = ggplot(df_autotomy, aes(x = population, y = perc_ind_pop, fill = total)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
            color = "black",
@@ -180,14 +169,14 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
     aes(x = population, y = 1, label = n),
     inherit.aes = FALSE,
     vjust = -0.5) +
-  scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
-                    labels = c("0" = "Non autotomized", "1" = "Autotomized")) +
+  scale_fill_manual(values = c("0" = "white", "1"="gray10", "2"="gray40", "3"="gray70", "4"="gray90"),
+                    labels = c("0"= "Non autotomized", "1"="1 Leg lost","2"="2 Legs lost","3"="3 Legs lost","4"="4 Legs lost")) +
   labs(
-    x = "Year",
+    x = "",
     y = "Individuals (%)",
     fill = ""
   ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
+ scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
@@ -203,39 +192,16 @@ Fig_2A = ggplot(df_individuals, aes(x = population, y = perc_ind_pop, fill = aut
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
 # Fig 2b
-Fig_2B = ggplot(df_autotomy, aes(x = population, y = perc, fill = autotomy)) +
+Fig_2B = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
   geom_bar(stat = "identity",
            position = position_stack(reverse = FALSE),
            color = "black",
            width = 0.7) +
-  scale_fill_manual(values = c("0"="lightgray","1"="gray30"),
-                    labels = c("0" = "Intact", "1" = "Autotomized")) +
-  labs(
-    x = "Year",
-    y = "Legs (%)",
-    fill = ""
-  ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1.06), expand = c(0, 0)) +
-  theme_minimal() +
-  theme(
-    panel.grid = element_blank(),
-    axis.title.y = element_text(size = 16),
-    axis.text.y = element_text(size = 12),
-    legend.text = element_text(size = 14),
-    axis.line = element_line(color = "black"),
-    axis.title.x = element_blank(),
-    axis.text.x = element_blank(), 
-    legend.position = "right"
-  ) + 
-  annotate("text", x = Inf, y = Inf, label = "B",
-           hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
-
-# Fig 2c
-Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
-  geom_bar(stat = "identity",
-           position = position_stack(reverse = FALSE),
-           color = "black",
-           width = 0.7) +
+   geom_text(
+    data = df_n,
+    aes(x = population, y = 1, label = a),
+    inherit.aes = FALSE,
+    vjust = -0.5) +
   scale_fill_manual(values = c("left"="lightgray","right"="gray30"),
                     labels = c("left" = "Left", "right" = "Right")) +
   geom_hline(yintercept = 0.5,
@@ -243,7 +209,7 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
              color = "black",
              linewidth = 0.8) +
   labs(
-    x = "Year",
+    x = "",
     y = "Autotomies (%)",
     fill = ""
     ) +
@@ -259,7 +225,7 @@ Fig_2C = ggplot(df_side, aes(x = population, y = perc_aut_side, fill = side)) +
     axis.title.x = element_blank(),
     legend.position = "right"
   ) + 
-  annotate("text", x = Inf, y = Inf, label = "C",
+  annotate("text", x = Inf, y = Inf, label = "B",
            hjust = 1.1, vjust = 1.5, size = 6, fontface = "bold")
 
 # combining the figures into a single panel and aligning the legend
@@ -268,16 +234,12 @@ leg_A <- get_legend(Fig_2A + theme (legend.justification = "left",
 legend.margin = margin(0, 0, 0, 0)))
 leg_B <- get_legend(Fig_2B + theme (legend.justification = "left",
 legend.margin = margin(0, 0, 0, 0)))
-leg_C <- get_legend(Fig_2C + theme (legend.justification = "left",
-legend.margin = margin(0, 0, 0, 0)))
  
 Fig_2A_noleg <- Fig_2A + theme(legend.position = "none")
 Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
-Fig_2C_noleg <- Fig_2C + theme(legend.position = "none")
 
 row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
 row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
-row_C <- plot_grid(Fig_2C_noleg, leg_C, rel_widths = c(1, 0.32))
 
 Fig2 <- row_A / row_B / row_C
 ```
@@ -453,6 +415,7 @@ Estimated probabilities revealed a consistent pattern across populations, with l
 ```{r marginal (population-level) probabilities}
 emm <- emmeans(m_final, ~ leg + population, type = "response")
 emm <- as.data.frame(emm)
+
 
 pairs(emmeans(m_final, ~ leg, type = "response"))
 pairs(emmeans(m_final, ~ population, type = "response"))

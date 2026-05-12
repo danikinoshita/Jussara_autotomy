@@ -1,0 +1,95 @@
+---
+title: "03 - Additional analysis"
+subtitle: "03_additional_analysis.qmd"
+format: 
+  html:
+    embed-resources: true
+bibliography: ../references.bib
+eval: true
+warning: false
+knitr:
+  opts_chunk: 
+    message: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# Overview
+
+1- Leg size
+2- Sex identified
+
+```{r calling Rpackages}
+library(here)
+library(dplyr)
+library(tidyr)
+library(glmmTMB)
+library(DHARMa)
+library(emmeans)
+```
+
+```{r importing the data}
+
+# plan 1
+data_leg <- read.table(here("data","raw","data_additional1.tsv"), header = T, stringsAsFactors = T, sep='\t')
+
+# creating a long table of data_leg
+leg_long <- data_leg %>%
+  pivot_longer(cols=Leg.I:Leg.IV,
+               names_to = "legid",
+               values_to = "size")
+
+
+# plan 2
+data_sex <- read.table(here("data","raw","data_additional2.tsv"), header = T, stringsAsFactors = T, sep='\t')
+data_sex[is.na(data_sex)] <- 0
+
+# creating a long table of data_sex (honestly, I don't think this is helpful because the data does not identify which leg it was lost in terms of side)
+sex_long <- data_sex %>%
+  mutate(id = 1:nrow(data_sex)) %>%
+  mutate(sex = factor(ifelse(data_sex$Male==1,"M","F"))) %>%
+  pivot_longer(cols=Leg.I:Leg.IV,
+               names_to = "legid",
+               values_to = "autotomy")
+sex_long <- sex_long[,-c(3,4)]
+
+# creating an summarised data frame
+sex_sum <- sex_long %>%
+  group_by(sex, legid) %>%
+  summarise (autotomy = sum(autotomy), .groups = "drop")
+```
+
+
+# ANOVA for testing if legs have different size
+
+```{r}
+boxplot(size ~ legid, leg_long)
+
+m <- lm(size ~ legid, leg_long)
+plot(m)
+anova(m)
+
+m_pos <- aov(size ~ legid, leg_long)
+TukeyHSD(m_pos)
+```
+
+Leg II > Leg IV > Leg I = Leg III
+
+# 
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
