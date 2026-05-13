@@ -115,7 +115,7 @@ sex_sum <- sex_long %>%
 sex_sum
 ```
 
-```{r Creating data frames for the grafics echo=FALSE}
+```{r Creating data frames for the grafics, echo=FALSE}
 df_n <- data.frame(
   population = c("2002", "2009", "2011", "2012", 'Total'),
   n = c("n = 380", "n = 485", "n = 208", "n = 332", "n = 1405"),
@@ -186,7 +186,7 @@ df_total_side <- data_raw [, -c(2,3,4,5,6,7,8,9)] %>%
 df_side <- bind_rows(df_side, df_total_side)
 ```
 
-```{r Figure 2 echo=FALSE}
+```{r Figure 2, echo=FALSE}
 # Fig 2a
 Fig_2A = ggplot(df_autotomy, aes(x = population, y = perc_ind_pop, fill = total)) +
   geom_bar(stat = "identity",
@@ -270,19 +270,10 @@ Fig_2B_noleg <- Fig_2B + theme(legend.position = "none")
 row_A <- plot_grid(Fig_2A_noleg, leg_A, rel_widths = c(1, 0.32))
 row_B <- plot_grid(Fig_2B_noleg, leg_B, rel_widths = c(1, 0.32))
 
-x_label <- ggdraw() +
-  draw_label("Year", x = 0.42, size = 16)
+Fig2 <- row_A / row_B / row_C
+```
 
-Fig2 <- row_A / row_B
-
-Fig2 <- plot_grid(
-  Fig2,
-  x_label,
-  ncol = 1,
-  rel_heights = c(2, 0.1)
-) +
-  theme(plot.background = element_rect(fill = "white", color = NA))
-
+```{r eval=FALSE}
 ggsave(here("outputs","figures","Fig_2.png"), plot = Fig2, width = 9, height = 12)
 ```
 
@@ -500,21 +491,15 @@ We estimated marginal probabilities of autotomy for each combination of leg type
 Estimated probabilities revealed a consistent pattern across populations, with leg II showing the highest probability of autotomy and leg III the lowest, while legs I and IV showed intermediate values. Although overall probabilities varied among populations, the relative ranking of leg types was conserved, indicating a stable functional structure in autotomy susceptibility.
 
 ```{r marginal (population-level) probabilities}
-
 emm <- emmeans(m_final, ~ leg + population, type = "response")
 emm <- as.data.frame(emm)
 
 
 pairs(emmeans(m_final, ~ leg, type = "response"))
 pairs(emmeans(m_final, ~ population, type = "response"))
-
 ```
 
-```{r Graphic echo=FALSE [PROBABILITIY OF AUTOTOMY]}
-emm$leg <- factor(emm$leg,
-                 levels = c(1, 2, 3, 4),
-                 labels = c("I", "II", "III", "IV"))
-
+```{r Graphic [PROBABILITIY OF AUTOTOMY], echo=FALSE}
 Fig_3 = ggplot(emm, 
                 aes(
                   x = factor(leg), 
@@ -559,14 +544,15 @@ Fig_3 = ggplot(emm,
     axis.line = element_line(color = "black"),
     legend.position = "right"
   )
+```
 
+```{r eval=FALSE}
 ggsave(here("outputs","figures","Fig_3.png"), plot = Fig_3, width = 10, height = 7)
 ```
 
 The results indicate that autotomy differs across populations. We used a pairwise comparison to identify which populations differed. However, this pattern may be driven by the 2009 population having a higher number of individuals that autotomized two or more legs. Therefore, we also tested whether the proportion of individuals exhibiting autotomy differed among populations using a GLM.
 
 ```{r}
-
 ma <- glm(autotomized ~ population, 
          family = binomial, 
          data = data_raw)
@@ -575,7 +561,7 @@ summary(ma)
 anova(ma, test = "Chisq")
 ```
 
-```{r save emm}
-# saveRDS(emm, file = here("data","processed","marginal_autotomy_probabilities.rds"))
+```{r save emm, eval=FALSE}
+saveRDS(emm, file = here("data","processed","marginal_autotomy_probabilities.rds"))
 ```
 
