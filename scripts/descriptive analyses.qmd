@@ -290,7 +290,10 @@ However, the ANOVA indicates a strong effect of leg type on size. Pairwise compa
 
 **Leg II > Leg IV > Leg I $\approx$ Leg III**
 ```{r echo=FALSE}
-boxplot(size ~ legid, leg_long)
+boxplot_legid <- ggplot(leg_long, aes(x = legid, y = size)) +
+  geom_boxplot()
+
+ggsave(here("outputs","supp","legid_size.png"), plot=boxplot_legid)
 ```
 
 ```{r}
@@ -325,6 +328,7 @@ Alternatively, if exposure due sensory role were the primary driver of autotomy,
 
 Deviations from these patterns suggest that autotomy is highly influenced by a combination of morphological and functional factors rather than a single axis of selection.
 
+# Premise test 2)
 
 # GLMMs for autotomy
 
