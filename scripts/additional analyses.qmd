@@ -24,13 +24,10 @@ library(dplyr)
 library(tidyr)
 library(lme4)
 library(lmerTest)
+library(glmmTMB)
 library(DHARMa)
 library(emmeans)
-library(ggplot2)
-library(glmmTMB)
 ```
-
-# Load data
 
 The data frame `leg_long` contains information on leg absolute length (i.e., from the femur base to the tarsus tip) for all four leg types of 10 randomly selected individuals, used to obtain estimates of mean and variation in leg size.
 
@@ -57,15 +54,12 @@ data_sex[is.na(data_sex)] <- 0
 # creating a long table of data_sex (honestly, I don't think this is helpful because the data does not identify which leg it was lost in terms of side)
 sex_long <- data_sex %>%
   mutate(id = 1:nrow(data_sex)) %>%
-  mutate(sex = factor(ifelse(data_sex$Male==1,"Male","Female"))) %>%
+  mutate(sex = factor(ifelse(data_sex$Male==1,"M","F"))) %>%
   pivot_longer(cols=Leg.I:Leg.IV,
                names_to = "legid",
                values_to = "autotomy")
 sex_long <- sex_long[,-c(3,4)]
 
-sex_long$legid <- gsub("\\.", " ", sex_long$legid)
-
-unique(sex_long$autotomy)
 head(sex_long)
 
 # creating an summarised data frame
@@ -125,73 +119,3 @@ Alternatively, if functional importance were the primary driver of autotomy, dif
 -   If locomotor function is less important: **Leg III $\approx$ Leg IV > Leg I > Leg II**
 
 Deviations from these patterns would suggest that autotomy is highly influenced by a combination of morphological, functional, and behavioural factors rather than a single axis of selection.
-
-# Are autotomy probabilities different between sexes?
-
-To evaluate whether autotomy probability differs between males and females, we fitted a series of binomial GLMMs including leg identity and sex as explanatory variables. Individual identity was initially included as a random intercept.
-
-Visual inspection of the data suggests that autotomy frequencies differ among leg types, but not between sexes.
-
-```{r echo=FALSE}
-ggplot(sex_long, aes(fill=legid, y=autotomy, x=sex)) + 
-    geom_bar(position="fill", stat="identity")
-```
-
-We first fitted the full model including the interaction between sex and leg identity.
-
-```{r}
-# cbind(sucesses,failures)
-m1 <- glmmTMB(
-  cbind(autotomy, 2 - autotomy) ~ sex*legid + (1|id),
-  family = binomial,
-  data = sex_long
-)
-```
-
-```{r echo=FALSE}
-simulateResiduals(m1, plot = T)
-
-summary(m1)
-```
-
-We then removed the interaction term.
-
-```{r}
-m2 <- glmmTMB(
-  cbind(autotomy, 2 - autotomy) ~ sex + legid + (1|id),
-  family = binomial,
-  data = sex_long
-)
-```
-
-```{r echo=FALSE}
-simulateResiduals(m2, plot = T)
-
-summary(m2)
-```
-
-Finally, we fitted a model containing only leg identity.
-
-```{r}
-m3 <- glmmTMB(
-  cbind(autotomy, 2 - autotomy) ~ legid + (1|id),
-  family = binomial,
-  data = sex_long
-)
-```
-
-```{r echo=FALSE}
-simulateResiduals(m3, plot = T)
-
-summary(m3)
-```
-
-Models were compared using likelihood ratio tests and AIC values.
-
-```{r}
-anova(m1,m2,m3)
-```
-
-Removing the interaction between sex and leg identity did not reduce model fit, nor did removing the main effect of sex. The simplest model, containing only leg identity, presented the lowest AIC. Additionally, the variance associated with the random intercept of individual identity was effectively zero, indicating little residual heterogeneity among individuals after accounting for leg type.
-
-Together, these results provide no evidence that males and females differ in autotomy probability in *Jussara* sp. Instead, autotomy probability appears to be primarily explained by leg identity.
