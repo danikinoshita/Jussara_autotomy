@@ -16,20 +16,22 @@ editor_options:
 
 # Overview
 
-1- Leg size
-2- Sex identified
+In this document we perform two premise tests: we test whether legs of different types (I, II, III or IV) differ in overall length, and whether amputation probability differs between sex and leg identity.
 
-```{r calling Rpackages}
+```{r calling Rpackages, echo=FALSE}
 library(here)
 library(dplyr)
 library(tidyr)
+library(lme4)
+library(lmerTest)
 library(glmmTMB)
 library(DHARMa)
 library(emmeans)
 ```
 
-```{r importing the data}
+The data frame `leg_long` contains information on leg absolute length (i.e., from the femur base to the tarsus tip) for all four leg types of 10 randomly selected individuals, used to obtain estimates of mean and variation in leg size.
 
+```{r importing leg length data, echo=FALSE}
 # plan 1
 data_leg <- read.table(here("data","raw","data_additional1.tsv"), header = T, stringsAsFactors = T, sep='\t')
 
@@ -39,7 +41,12 @@ leg_long <- data_leg %>%
                names_to = "legid",
                values_to = "size")
 
+head(leg_long)
+```
 
+The data frame `sex_long` contains information on 147 individuals concerning identity, sex, and the presence and identity of autotomized legs.
+
+```{r importing amputation by sex data, echo=FALSE}
 # plan 2
 data_sex <- read.table(here("data","raw","data_additional2.tsv"), header = T, stringsAsFactors = T, sep='\t')
 data_sex[is.na(data_sex)] <- 0
@@ -53,43 +60,62 @@ sex_long <- data_sex %>%
                values_to = "autotomy")
 sex_long <- sex_long[,-c(3,4)]
 
+head(sex_long)
+
 # creating an summarised data frame
 sex_sum <- sex_long %>%
   group_by(sex, legid) %>%
   summarise (autotomy = sum(autotomy), .groups = "drop")
+
+sex_sum
 ```
 
+# Are there size differences between the different types of legs?
 
-# ANOVA for testing if legs have different size
+The hypothesis underlying our null models assumes that legs differ both structurally and functionally. To evaluate whether they are structurally distinct, we first test whether leg types differ in absolute size. Field observations suggest that Leg II is visibly the longest, but it is unclear whether Legs I, III, and IV also differ.
+
+We fit a mixed model assuming that each individual has its own baseline size, while the effect of leg type is consistent across individuals.
+
+This model indicates that individuals vary in baseline leg size, but residual variation remains larger, indicating additional unexplained variation.
+
+However, the ANOVA indicates a strong effect of leg type on size. Pairwise comparisons suggest the pattern:
+
+**Leg II > Leg IV > Leg I $\approx$ Leg III**
+
+```{r echo=FALSE}
+boxplot(size ~ legid, leg_long)
+```
 
 ```{r}
-boxplot(size ~ legid, leg_long)
+# since there is repetition, we should use Individual as a random factor
+m <- lmer(size ~ legid + (1 | Individual), data = leg_long)
+```
 
-m <- lm(size ~ legid, leg_long)
-plot(m)
+```{r echo=FALSE}
+simulateResiduals(m, plot = T)
+
+summary(m)
+
 anova(m)
 
-m_pos <- aov(size ~ legid, leg_long)
-TukeyHSD(m_pos)
+emmeans(m, pairwise ~ legid)
 ```
 
-Leg II > Leg IV > Leg I = Leg III
+## Interpretation and implications
 
-# 
+These results confirm that leg types are not only functionally distinct, but also structurally differentiated in size. This has important implications for interpreting patterns of autotomy, since leg identity may simultaneously reflect both functional role and mechanical or morphological vulnerability.
 
-```{r}
+However, because leg length was not measured for all individuals included in the autotomy dataset used in the null models, we cannot fully disentangle structural (size-related) and functional effects in subsequent analyses.
 
-```
+For example, higher autotomy frequency in Leg II could reflect effects of:
+-   functional importance (e.g., sensory role),
+-   mechanical exposure or detectability due to length,
+-   or a combination of both factors.
 
+If autotomy probability strictly follows the pattern **Leg II > Leg IV > Leg I $\approx$ Leg III**, this would be consistent with a dominant effect of leg length on predation risk or encounter probability, suggesting that longer legs are more frequently targeted or lost.
 
+Alternatively, if functional importance were the primary driver of autotomy, different predictions would be expected depending on which function is less relevant:
+-   If sensory function is less important: **Leg II > Leg I > Leg III $\approx$ Leg IV**
+-   If locomotor function is less important: **Leg III $\approx$ Leg IV > Leg I > Leg II**
 
-
-
-
-
-
-
-
-
-
-
+Deviations from these patterns would suggest that autotomy is highly influenced by a combination of morphological, functional, and behavioural factors rather than a single axis of selection.
