@@ -27,14 +27,14 @@ library(patchwork)
 ```
 
 ```{r importing the data}
-data_raw <- read.table(here("data","raw","data.tsv"), header = T, stringsAsFactors = T, sep='\t')
+main_raw <- read.table(here("data","raw","main_raw.tsv"), header = T, stringsAsFactors = T, sep='\t')
 
 # reorder the levels of the population factor to ensure they are in the correct temporal order
-data_raw <- data_raw %>%
+main_raw <- main_raw %>%
   mutate(population = factor(population, levels = c("TG", "MC", "GE", "GP")))
 
 # changing the names of the population to the year they've been collected
-data_raw <- data_raw %>%
+main_raw <- main_raw %>%
   mutate(population = recode(population,
     "TG" = "2002",
     "MC" = "2009",
@@ -50,10 +50,10 @@ First we established the test statistic, which is the event of interest for each
 ## Hypothesis 1: how many times the entire pair of legs was lost.
 
 ```{r}
-leg1 <- sum(data_raw$r1 == 1 & data_raw$l1 == 1)
-leg2 <- sum(data_raw$r2 == 1 & data_raw$l2 == 1)
-leg3 <- sum(data_raw$r3 == 1 & data_raw$l3 == 1)
-leg4 <- sum(data_raw$r4 == 1 & data_raw$l4 == 1)
+leg1 <- sum(main_raw$r1 == 1 & main_raw$l1 == 1)
+leg2 <- sum(main_raw$r2 == 1 & main_raw$l2 == 1)
+leg3 <- sum(main_raw$r3 == 1 & main_raw$l3 == 1)
+leg4 <- sum(main_raw$r4 == 1 & main_raw$l4 == 1)
 ```
 
 The observed data was:
@@ -73,8 +73,8 @@ The observed data was:
 *Note: because we do not have the temporal sequence in which the legs were lost, we are also not considering cases in which 3 legs were lost because this inevitably would count as a asymmetrical lost even if the first legs lost were in opposite sides of the body.*
 
 ```{r}
-sideR <- sum(rowSums(data_raw[, c("r1", "r3", "r4")] == 1) == 2)
-sideL <- sum(rowSums(data_raw[, c("l1", "l3", "l4")] == 1) == 2)
+sideR <- sum(rowSums(main_raw[, c("r1", "r3", "r4")] == 1) == 2)
+sideL <- sum(rowSums(main_raw[, c("l1", "l3", "l4")] == 1) == 2)
 side <- sideR + sideL
 ```
 
@@ -104,14 +104,14 @@ map <- readRDS(here("data", "processed", "marginal_autotomy_probabilities.rds"))
 
 # creating a data frame for the simulation
 leg_names <- c("r1", "r2", "r3", "r4", "l1", "l2", "l3", "l4")
-df <- as.data.frame(matrix(0, nrow = nrow(data_raw), ncol = 8))
+df <- as.data.frame(matrix(0, nrow = nrow(main_raw), ncol = 8))
 colnames(df) <- leg_names
 
 # spliting the data frame for each year (population)
-df_split <- split(df, data_raw$population)
+df_split <- split(df, main_raw$population)
 
-# spliting the total in the data_raw for each year (population)
-total_split <- split(data_raw$total, data_raw$population)
+# spliting the total in the main_raw for each year (population)
+total_split <- split(main_raw$total, main_raw$population)
 ```
 
 ```{r eval=FALSE}
@@ -310,20 +310,20 @@ fig_side = ggplot(data.frame(sim = sim.side), aes(x = sim)) +
 ```
 
 ```{r eval=FALSE}
-ggsave(here("outputs","supp","null_leg1.png"), plot=fig_leg1, width=10, height=7)
-ggsave(here("outputs","supp","null_leg2.png"), plot=fig_leg2, width=10, height=7)
-ggsave(here("outputs","supp","null_leg3.png"), plot=fig_leg3, width=10, height=7)
-ggsave(here("outputs","supp","null_leg4.png"), plot=fig_leg4, width=10, height=7)
-ggsave(here("outputs","supp","null_side.png"), plot=fig_side, width=10, height=7)
+ggsave(here("outputs","supplementary_material","null_leg1.png"), plot=fig_leg1, width=10, height=7)
+ggsave(here("outputs","supplementary_material","null_leg2.png"), plot=fig_leg2, width=10, height=7)
+ggsave(here("outputs","supplementary_material","null_leg3.png"), plot=fig_leg3, width=10, height=7)
+ggsave(here("outputs","supplementary_material","null_leg4.png"), plot=fig_leg4, width=10, height=7)
+ggsave(here("outputs","supplementary_material","null_side.png"), plot=fig_side, width=10, height=7)
 ```
 
 ```{r trying to make graphics, include=FALSE, eval=FALSE}
-no_leg1 <- sum(!(data_raw$r1 == 1 & data_raw$l1 == 1) & data_raw$total >=1)
-no_leg2 <- sum(!(data_raw$r2 == 1 & data_raw$l2 == 1) & data_raw$total >=1)
-no_leg3 <- sum(!(data_raw$r3 == 1 & data_raw$l3 == 1) & data_raw$total >=1)
-no_leg4 <- sum(!(data_raw$r4 == 1 & data_raw$l4 == 1) & data_raw$total >=1)
+no_leg1 <- sum(!(main_raw$r1 == 1 & main_raw$l1 == 1) & main_raw$total >=1)
+no_leg2 <- sum(!(main_raw$r2 == 1 & main_raw$l2 == 1) & main_raw$total >=1)
+no_leg3 <- sum(!(main_raw$r3 == 1 & main_raw$l3 == 1) & main_raw$total >=1)
+no_leg4 <- sum(!(main_raw$r4 == 1 & main_raw$l4 == 1) & main_raw$total >=1)
 
-no_sideR <- sum(!(rowSums(data_raw[, c("r1", "r3", "r4")] == 1) == 2))
-no_sideL <- sum(!(rowSums(data_raw[, c("l1", "l3", "l4")] == 1) == 2))
+no_sideR <- sum(!(rowSums(main_raw[, c("r1", "r3", "r4")] == 1) == 2))
+no_sideL <- sum(!(rowSums(main_raw[, c("l1", "l3", "l4")] == 1) == 2))
 no_side <- no_sideR + no_sideL
 ```

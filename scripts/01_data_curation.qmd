@@ -1,0 +1,128 @@
+---
+title: "01_data_curation"
+format: html
+---
+
+# Overview
+
+In this document, we curate, reorganize, and format the raw data prior to analysis.
+
+```{r echo=FALSE, message=FALSE}
+library(here)
+library(dplyr)
+library(tidyr)
+```
+
+# Load data
+
+The data frame `main_raw` contains information on autotomy for all eight legs of *Jussara* sp.. Although all individuals were collected along the same transect, we considered distinct “populations” because sampling occurred in non-consecutive years (TG = 2002, MC = 2009, GE = 2011, and GP = 2012). Each row corresponds to an individual, and the columns include information on individual identity (`IDs` ranging from 1 to 1405), leg identity (`r1`, `r2`, `r3`, `r4` for right legs and `l1`, `l2`, `l3`, `l4` for left legs), the number of autotomized legs on each body side (columns `right` and `left`), the total number of autotomized legs (column `total`), and `population` (collector).
+
+```{r echo=FALSE}
+main_raw <- read.table(here("data","raw","main_raw.tsv"), header = T, stringsAsFactors = T, sep='\t')
+
+head(main_raw)
+```
+
+The data frame `sex_raw` contains information on 147 individuals, including its sex (columns `Male` and `Female`), leg pair identity (columns `Leg.I`, `Leg.II`, `Leg.III` and `Leg.IV`), and the total number of autotomies on each body side (columns `Right` and `Left`).
+
+```{r echo=FALSE}
+sex_raw <- read.table(here("data","raw","sex_raw.tsv"), header = T, stringsAsFactors = T, sep='\t')
+
+head(sex_raw)
+```
+
+The data frame `leg_length_raw` contains information on `individual` identity (not necessarily corresponding to the IDs in `main_raw`) and leg length (mm) for all four leg pairs (columns `Leg.I`, `Leg.II`, `Leg.III` and `Leg.IV`) for 10 individuals collected from the 2002 population. 
+
+```{r echo=FALSE}
+leg_length_raw <- read.table(here("data","raw","leg_length_raw.tsv"), header = T, stringsAsFactors = T, sep='\t')
+
+head(leg_length_raw)
+```
+
+# Data preprocessing
+
+To perform the following descriptive analyses, we transformed the raw data into long format and standardized column names and variable classes.
+
+## Main data
+
+```{r}
+# reorder the levels of the population factor to ensure they are in the correct temporal order
+main_raw <- main_raw %>%
+  mutate(population = factor(population, levels = c("TG", "MC", "GE", "GP")))
+
+# creating a presence/absence of autotomy column
+main_raw$autotomized <- ifelse(main_raw$total >= 1, 1, 0)
+
+# changing the names of the population to the year they've been collected
+main_raw <- main_raw %>%
+  mutate(population = recode(population,
+    "TG" = "2002",
+    "MC" = "2009",
+    "GE" = "2011",
+    "GP" = "2012"
+  ))
+
+# creating a long table for the raw data
+main_data <- main_raw[, -c(10, 11, 12,14)] %>%
+  pivot_longer(cols = r1:l4,
+               names_to = "leg_id",
+               values_to = "autotomy") %>%
+  mutate(
+    side = factor(ifelse(grepl("^r", leg_id), "right", "left"),
+                  levels = c("right", "left")),
+    leg = factor(gsub("[rl]", "", leg_id), levels = c("1", "2", "3", "4")),
+    leg_id = factor(leg_id, levels = c("r1", "r2", "r3", "r4", "l1", "l2", "l3", "l4"))
+  ) %>%
+  select(id, leg_id, leg, side, autotomy, population)
+```
+
+```{r echo=FALSE}
+head(main_data)
+```
+
+## Sex data
+
+```{r}
+# turn NAs into zeros, since they are observed absences of autotomy
+sex_raw[is.na(sex_raw)] <- 0
+
+# creating a long table of sex_raw
+sex_data <- sex_raw %>%
+  mutate(id = 1:nrow(sex_raw),
+         sex = factor(ifelse(Male == 1,"M","F"))) %>%
+  pivot_longer(cols = Leg.I:Leg.IV,
+               names_to = "leg_id",
+               values_to = "autotomy") %>%
+  select(id, sex, leg_id, autotomy)
+```
+
+```{r echo=FALSE}
+head(sex_data)
+```
+
+## Leg length data
+
+```{r}
+# creating a long table of leg_length_raw
+leg_length_data <- leg_length_raw %>%
+  rename(id = Individual) %>%
+  pivot_longer(cols=Leg.I:Leg.IV,
+               names_to = "leg_id",
+               values_to = "length")
+```
+
+```{r echo=FALSE}
+head(leg_length_data)
+```
+
+# Outputs
+
+All three preprocessed data frames are now available in the `data/processed` directory.
+
+```{r}
+saveRDS(main_data_long, file = here("data","processed","main_data.rds"))
+
+saveRDS(sex_data, file = here("data","processed","sex_data.rds"))
+
+saveRDS(leg_length_data, file = here("data","processed","leg_length_data.rds"))
+```
