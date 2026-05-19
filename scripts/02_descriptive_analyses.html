@@ -2443,14 +2443,37 @@ window.Quarto = {
 <p>We fit a mixed model assuming that each individual has its own baseline size, while the effect of leg type is consistent across individuals.</p>
 <p>The ANOVA indicates a strong effect of leg type on size. Pairwise comparisons suggest the pattern:</p>
 <p><strong>Leg II &gt; Leg IV &gt; Leg I <span class="math inline">\(\approx\)</span> Leg III</strong></p>
+<section id="descriptive-mean-and-sd" class="level3">
+<h3 class="anchored" data-anchor-id="descriptive-mean-and-sd">Descriptive mean and sd</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># since there is repetition, we should use Individual as a random factor</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>mleg <span class="ot">&lt;-</span> <span class="fu">lmer</span>(length <span class="sc">~</span> leg_id <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id), <span class="at">data =</span> leg_length_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># mean</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">aggregate</span>(leg_length_data<span class="sc">$</span>length, <span class="at">by =</span> <span class="fu">list</span>(leg_length_data<span class="sc">$</span>leg_id), mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Group.1       x
+1   Leg.I  49.700
+2  Leg.II 100.939
+3 Leg.III  49.202
+4  Leg.IV  66.119</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sd</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">aggregate</span>(leg_length_data<span class="sc">$</span>length, <span class="at">by =</span> <span class="fu">list</span>(leg_length_data<span class="sc">$</span>leg_id), sd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Group.1        x
+1   Leg.I 3.061797
+2  Leg.II 5.637197
+3 Leg.III 3.237364
+4  Leg.IV 3.827388</code></pre>
+</div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(mleg, <span class="at">file =</span> <span class="fu">here</span>(<span class="st">&quot;outputs&quot;</span>,<span class="st">&quot;model_outputs&quot;</span>,<span class="st">&quot;leg_length_model.rds&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># since there is repetition, we should use Individual as a random factor</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>mleg <span class="ot">&lt;-</span> <span class="fu">lmer</span>(length <span class="sc">~</span> leg_id <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id), <span class="at">data =</span> leg_length_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(mleg, <span class="at">file =</span> <span class="fu">here</span>(<span class="st">&quot;outputs&quot;</span>,<span class="st">&quot;model_outputs&quot;</span>,<span class="st">&quot;leg_length_model.rds&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">simulateResiduals</span>(mleg, <span class="at">plot =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2463,6 +2486,7 @@ window.Quarto = {
  
 Scaled residual values: 0.908 0.996 0.108 0.876 0.376 0.656 0.06 0.428 0.592 0.176 0.56 0.568 0.732 0.896 0.76 0.8 0.748 0.724 0.756 0.74 ...</code></pre>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mleg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Linear mixed model fit by REML [&#39;lmerMod&#39;]
 Formula: length ~ leg_id + (1 | id)
@@ -2493,11 +2517,13 @@ leg_idLg.II -0.634
 leg_dLg.III -0.634  0.500         
 leg_idLg.IV -0.634  0.500   0.500 </code></pre>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(mleg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Analysis of Variance Table
        npar Sum Sq Mean Sq F value
 leg_id    3  17676  5892.2  442.22</code></pre>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">emmeans</span>(mleg, pairwise <span class="sc">~</span> leg_id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$emmeans
  leg_id  emmean   SE   df lower.CL upper.CL
@@ -2523,17 +2549,18 @@ P value adjustment: tukey method for comparing a family of 4 estimates </code></
 </div>
 </div>
 </section>
+</section>
 <section id="are-autotomy-probabilities-different-between-sexes" class="level2">
 <h2 class="anchored" data-anchor-id="are-autotomy-probabilities-different-between-sexes">2) Are autotomy probabilities different between sexes?</h2>
 <p>To evaluate whether autotomy probability differs between males and females, we fitted a series of binomial GLMMs including leg identity and sex as explanatory variables. Individual identity was initially included as a random intercept.</p>
 <p>We first fitted the full model including the interaction between sex and leg identity.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cbind(sucesses,failures)</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>msexfull <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(autotomy, <span class="dv">2</span> <span class="sc">-</span> autotomy) <span class="sc">~</span> sex<span class="sc">*</span>leg_id <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sex_data</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cbind(sucesses,failures)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>msexfull <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(autotomy, <span class="dv">2</span> <span class="sc">-</span> autotomy) <span class="sc">~</span> sex<span class="sc">*</span>leg_id <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sex_data</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
@@ -2579,11 +2606,11 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 </div>
 <p>We then removed the interaction term.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>msexadd <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(autotomy, <span class="dv">2</span> <span class="sc">-</span> autotomy) <span class="sc">~</span> sex <span class="sc">+</span> leg_id <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sex_data</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>msexadd <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(autotomy, <span class="dv">2</span> <span class="sc">-</span> autotomy) <span class="sc">~</span> sex <span class="sc">+</span> leg_id <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sex_data</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
@@ -2626,11 +2653,11 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 </div>
 <p>Finally, we fitted a model containing only leg identity.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>msexbase <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(autotomy, <span class="dv">2</span> <span class="sc">-</span> autotomy) <span class="sc">~</span> leg_id <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sex_data</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>msexbase <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(autotomy, <span class="dv">2</span> <span class="sc">-</span> autotomy) <span class="sc">~</span> leg_id <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sex_data</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
@@ -2672,7 +2699,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 </div>
 <p>Models were compared using likelihood ratio tests and AIC values.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(msexfull,msexadd,msexbase)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(msexfull,msexadd,msexbase)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Data: sex_data
 Models:
@@ -2698,11 +2725,11 @@ msexfull  9 664.55 703.94 -323.27   646.55 2.3712      3     0.4990</code></pre>
 <p>We fitted a model including side, leg, and population as fixed effects, and a random intercept for individual identity. Population was treated as a fixed effect due to the small number of levels (four), allowing direct estimation of differences in autotomy probability among sampling years.</p>
 <p>Grouped residual diagnostics did not reveal significant dispersion when structured by leg, population, side, or individual identity, indicating that the additive model adequately captures the main sources of variation in autotomy probability.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>mlegsidepopadd <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(autotomy <span class="sc">~</span> side <span class="sc">+</span> leg <span class="sc">+</span> population <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id), </span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">&quot;logit&quot;</span>), </span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">data =</span> main_data)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>mlegsidepopadd_sim <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(mlegsidepopadd, <span class="at">plot =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>mlegsidepopadd <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(autotomy <span class="sc">~</span> side <span class="sc">+</span> leg <span class="sc">+</span> population <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id), </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">&quot;logit&quot;</span>), </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">data =</span> main_data)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>mlegsidepopadd_sim <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(mlegsidepopadd, <span class="at">plot =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2710,8 +2737,8 @@ msexfull  9 664.55 703.94 -323.27   646.55 2.3712      3     0.4990</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by individual</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>id))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by individual</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>id))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2728,8 +2755,8 @@ data:  simulationOutput
 dispersion = 0.96924, p-value = 0.496
 alternative hypothesis: two.sided</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by leg</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>leg))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by leg</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>leg))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2746,8 +2773,8 @@ data:  simulationOutput
 dispersion = 0.33073, p-value = 0.376
 alternative hypothesis: two.sided</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by side</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>side))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by side</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>side))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2764,8 +2791,8 @@ data:  simulationOutput
 dispersion = 0.018793, p-value = 0.368
 alternative hypothesis: two.sided</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by population</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>population))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># group by population</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(<span class="fu">recalculateResiduals</span>(mlegsidepopadd_sim, <span class="at">group =</span> main_data<span class="sc">$</span>population))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2789,7 +2816,7 @@ alternative hypothesis: two.sided</code></pre>
 <p>To evaluate the contribution of each predictor to baseline variation in autotomy probability, we performed one-factor-at-a-time model comparisons using likelihood ratio tests implemented via the <code>drop1</code> function. This procedure sequentially removes each fixed effect from the full additive model while retaining all other predictors and the random intercept for <code>id</code>.</p>
 <p>These results indicate that permutation procedures should preserve variation associated with leg identity and population, whereas body side does not represent a strong source of structured heterogeneity in baseline autotomy probability and may not require explicit conditioning in the null model.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">drop1</span>(mlegsidepopadd, <span class="at">test =</span> <span class="st">&quot;Chisq&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">drop1</span>(mlegsidepopadd, <span class="at">test =</span> <span class="st">&quot;Chisq&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Single term deletions
 
@@ -2809,11 +2836,11 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <h2 class="anchored" data-anchor-id="final-model">Final model</h2>
 <p>Given the lack of evidence for an effect of body side, it was excluded from the final model used for estimation.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>mlegpop <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(autotomy <span class="sc">~</span> leg <span class="sc">+</span> population <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">family =</span> binomial,</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> main_data)</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">simulateResiduals</span>(mlegpop, <span class="at">plot =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>mlegpop <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(autotomy <span class="sc">~</span> leg <span class="sc">+</span> population <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>id),</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">family =</span> binomial,</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> main_data)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="fu">simulateResiduals</span>(mlegpop, <span class="at">plot =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2826,7 +2853,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
  
 Scaled residual values: 0.2253379 0.2651702 0.6040199 0.09020382 0.7393339 0.2278479 0.8720758 0.6401489 0.2953265 0.5669027 0.8116418 0.813767 0.08149975 0.08466035 0.7264081 0.09995816 0.4955491 0.5575889 0.8271743 0.2597612 ...</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mlegpop)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mlegpop)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: binomial  ( logit )
 Formula:          autotomy ~ leg + population + (1 | id)
@@ -2861,10 +2888,22 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <h1>Marginal probabilities</h1>
 <p>Estimated probabilities revealed a consistent pattern across populations, with leg II showing the highest probability of autotomy and leg III the lowest, while legs I and IV showed intermediate values. Although overall probabilities varied among populations, the relative ranking of leg types was conserved, indicating a stable functional structure in susceptibility to autotomy.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>emm <span class="ot">&lt;-</span> <span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> leg <span class="sc">+</span> population, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>)</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>emm <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(emm)</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">pairs</span>(<span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> leg, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>emm <span class="ot">&lt;-</span> <span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> leg <span class="sc">+</span> population, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>emm <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(emm)</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> leg, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> leg   prob      SE  df asymp.LCL asymp.UCL
+ 1   0.0492 0.00434 Inf    0.0414    0.0584
+ 2   0.1111 0.00691 Inf    0.0983    0.1254
+ 3   0.0354 0.00359 Inf    0.0290    0.0432
+ 4   0.0591 0.00483 Inf    0.0504    0.0694
+
+Results are averaged over the levels of: population 
+Confidence level used: 0.95 
+Intervals are back-transformed from the logit scale </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pairs</span>(<span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> leg, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> contrast    odds.ratio     SE  df null z.ratio p.value
  leg1 / leg2      0.414 0.0413 Inf    1  -8.832 &lt;0.0001
@@ -2878,7 +2917,19 @@ Results are averaged over the levels of: population
 P value adjustment: tukey method for comparing a family of 4 estimates 
 Tests are performed on the log odds ratio scale </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pairs</span>(<span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> population, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> population, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> population   prob      SE  df asymp.LCL asymp.UCL
+ 2002       0.0542 0.00462 Inf    0.0459    0.0640
+ 2009       0.0714 0.00502 Inf    0.0622    0.0819
+ 2011       0.0643 0.00656 Inf    0.0525    0.0784
+ 2012       0.0470 0.00446 Inf    0.0390    0.0565
+
+Results are averaged over the levels of: leg 
+Confidence level used: 0.95 
+Intervals are back-transformed from the logit scale </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pairs</span>(<span class="fu">emmeans</span>(mlegpop, <span class="sc">~</span> population, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> contrast                        odds.ratio     SE  df null z.ratio p.value
  population2002 / population2009      0.745 0.0769 Inf    1  -2.850  0.0227
@@ -2894,11 +2945,11 @@ Tests are performed on the log odds ratio scale </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">here</span>(<span class="st">&quot;outputs&quot;</span>,<span class="st">&quot;figures&quot;</span>,<span class="st">&quot;Fig_3.png&quot;</span>), <span class="at">plot =</span> Fig_3, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="dv">7</span>, <span class="at">dpi =</span> <span class="dv">600</span>)</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">here</span>(<span class="st">&quot;outputs&quot;</span>,<span class="st">&quot;figures&quot;</span>,<span class="st">&quot;Fig_3.pdf&quot;</span>), <span class="at">plot =</span> Fig_3, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="dv">7</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">here</span>(<span class="st">&quot;outputs&quot;</span>,<span class="st">&quot;figures&quot;</span>,<span class="st">&quot;Fig_3.png&quot;</span>), <span class="at">plot =</span> Fig_3, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="dv">7</span>, <span class="at">dpi =</span> <span class="dv">600</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">here</span>(<span class="st">&quot;outputs&quot;</span>,<span class="st">&quot;figures&quot;</span>,<span class="st">&quot;Fig_3.pdf&quot;</span>), <span class="at">plot =</span> Fig_3, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="dv">7</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(emm, <span class="at">file =</span> <span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,<span class="st">&quot;processed&quot;</span>,<span class="st">&quot;marginal_autotomy_probabilities.rds&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(emm, <span class="at">file =</span> <span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,<span class="st">&quot;processed&quot;</span>,<span class="st">&quot;marginal_autotomy_probabilities.rds&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 

@@ -422,6 +422,16 @@ boxplot_leglength <- ggplot(leg_length_data, aes(x = leg_id, y = length)) +
 ggsave(here("outputs","supplementary_material","leg_length_fig.png"), plot = boxplot_leglength)
 ```
 
+### Descriptive mean and sd
+
+```{r}
+# mean
+aggregate(leg_length_data$length, by = list(leg_length_data$leg_id), mean)
+
+# sd
+aggregate(leg_length_data$length, by = list(leg_length_data$leg_id), sd)
+```
+
 ```{r}
 # since there is repetition, we should use Individual as a random factor
 mleg <- lmer(length ~ leg_id + (1 | id), data = leg_length_data)
@@ -431,7 +441,7 @@ mleg <- lmer(length ~ leg_id + (1 | id), data = leg_length_data)
 saveRDS(mleg, file = here("outputs","model_outputs","leg_length_model.rds"))
 ```
 
-```{r echo=FALSE}
+```{r}
 simulateResiduals(mleg, plot = T)
 
 summary(mleg)
