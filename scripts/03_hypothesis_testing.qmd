@@ -1,6 +1,6 @@
 ---
-title: "02 - Hypothesis testing"
-subtitle: "02_hypothesis_testing.qmd"
+title: "03 - Hypothesis testing"
+subtitle: "03_hypothesis_testing.qmd"
 format: 
   html:
     embed-resources: true

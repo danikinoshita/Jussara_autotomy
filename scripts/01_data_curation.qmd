@@ -1,6 +1,17 @@
 ---
-title: "01_data_curation"
-format: html
+title: "01 - Data curation"
+subtitle: "01_data_curation.qmd"
+format: 
+  html:
+    embed-resources: true
+bibliography: ../references.bib
+eval: true
+warning: false
+knitr:
+  opts_chunk: 
+    message: false
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Overview
@@ -120,7 +131,7 @@ head(leg_length_data)
 All three preprocessed data frames are now available in the `data/processed` directory.
 
 ```{r}
-saveRDS(main_data_long, file = here("data","processed","main_data.rds"))
+saveRDS(main_data, file = here("data","processed","main_data.rds"))
 
 saveRDS(sex_data, file = here("data","processed","sex_data.rds"))
 
