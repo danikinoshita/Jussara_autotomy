@@ -437,10 +437,6 @@ aggregate(leg_length_data$length, by = list(leg_length_data$leg_id), sd)
 mleg <- lmer(length ~ leg_id + (1 | id), data = leg_length_data)
 ```
 
-```{r eval=FALSE}
-saveRDS(mleg, file = here("outputs","model_outputs","leg_length_model.rds"))
-```
-
 ```{r}
 simulateResiduals(mleg, plot = T)
 
