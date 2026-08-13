@@ -239,7 +239,7 @@ fig_leg1 = ggplot(data.frame(sim = sim.leg1), aes(x = sim)) +
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
-  theme(plot.title = element_text(size = 12))
+  theme(plot.title = element_text(size = 12, face = "bold"))
 
 fig_leg2 = ggplot(data.frame(sim = sim.leg2), aes(x = sim)) +
   geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "#777777") +
@@ -256,7 +256,7 @@ fig_leg2 = ggplot(data.frame(sim = sim.leg2), aes(x = sim)) +
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
-  theme(plot.title = element_text(size = 12))
+  theme(plot.title = element_text(size = 12, face = "bold"))
 
 fig_leg3 = ggplot(data.frame(sim = sim.leg3), aes(x = sim)) +
   geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "#777777") +
@@ -273,7 +273,7 @@ fig_leg3 = ggplot(data.frame(sim = sim.leg3), aes(x = sim)) +
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
-  theme(plot.title = element_text(size = 12))
+  theme(plot.title = element_text(size = 12, face = "bold"))
 
 fig_leg4 = ggplot(data.frame(sim = sim.leg4), aes(x = sim)) +
   geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "#777777") +
@@ -290,7 +290,7 @@ fig_leg4 = ggplot(data.frame(sim = sim.leg4), aes(x = sim)) +
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
-  theme(plot.title = element_text(size = 12))
+  theme(plot.title = element_text(size = 12, face = "bold"))
 
 fig_side = ggplot(data.frame(sim = sim.side), aes(x = sim)) +
   geom_histogram(binwidth = 1, fill = "#bdbdbd", color = "#777777") +
@@ -307,7 +307,7 @@ fig_side = ggplot(data.frame(sim = sim.side), aes(x = sim)) +
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
-  theme(plot.title = element_text(size = 12))
+  theme(plot.title = element_text(size = 12, face = "bold"))
 
 fig_null <- fig_leg1 + fig_leg2 +
   fig_leg3 + fig_leg4 +
@@ -321,13 +321,13 @@ fig_null <- fig_leg1 + fig_leg2 +
   ) +
   plot_annotation(title = "Null distributions",
     theme = theme(
-      plot.title = element_text(size = 20)
+      plot.title = element_text(size = 16, face = "bold")
     )
   )
 ```
 
 ```{r eval=FALSE}
-ggsave(here("outputs","supplementary_material","null_histograms.png"), plot=fig_null, width=20, height=23)
+ggsave(here("outputs","supplementary_material","null_histograms.png"), plot=fig_null, width=8, height=7)
 ```
 
 ```{r trying to make graphics, include=FALSE, eval=FALSE}
