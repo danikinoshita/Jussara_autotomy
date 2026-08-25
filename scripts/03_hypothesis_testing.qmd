@@ -235,7 +235,7 @@ fig_leg1 = ggplot(data.frame(sim = sim.leg1), aes(x = sim)) +
            label = "",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Leg I",
+  labs(title = "A) Leg I",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
@@ -252,7 +252,7 @@ fig_leg2 = ggplot(data.frame(sim = sim.leg2), aes(x = sim)) +
            label = "",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Leg II",
+  labs(title = "B) Leg II",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
@@ -269,7 +269,7 @@ fig_leg3 = ggplot(data.frame(sim = sim.leg3), aes(x = sim)) +
            label = "",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Leg III",
+  labs(title = "C) Leg III",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
@@ -286,7 +286,7 @@ fig_leg4 = ggplot(data.frame(sim = sim.leg4), aes(x = sim)) +
            label = "",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Leg IV",
+  labs(title = "D) Leg IV",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
@@ -303,7 +303,7 @@ fig_side = ggplot(data.frame(sim = sim.side), aes(x = sim)) +
            label = "",
            vjust = 1.5,
            color = "#d7301f") +
-  labs(title = "Side",
+  labs(title = "E) Sides",
        x = "Number of events",
        y = "Frequency") +
   theme_classic(base_size = 12) +
