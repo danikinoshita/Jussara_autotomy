@@ -9,7 +9,7 @@ editor:
 
 This repository contains the data and R scripts used in the study:
 
-**Going out on a limb: patterns of leg autotomy in a harvestman are shaped by leg identity**.
+**Kinoshita, D. A., W. C. A. Bezerra, T. M. Del Corso, and G. Machado. 2026. Going Out on a Limb: Appendage Length and Function Shape Leg Loss Without Evidence of Autotomy Modulation. *Ethology* 1–9. https://doi.org/10.1111/eth.70118.**.
 
 The study analyses patterns of leg autotomy in the harvestman *Jussara* sp. (Sclerosomatidae) by quantifying autotomy frequency across leg types and years. Monte Carlo randomizations are then used to test whether (1) the loss of one leg reduces the probability of losing its homologous counterpart, and (2) the loss of one ambulatory leg reduces the probability of losing another ambulatory leg on the same side of the body.
 
@@ -143,3 +143,28 @@ renv::restore()                # installs packages from renv.lock
     1. `scripts/01_data_curation.qmd`
     2. `scripts/02_descriptive_analyses.qmd`
     3. `scripts/03_hypothesis_testing.qmd`
+
+# License
+
+The scripts and data in this repository are associated with the manuscript: **Going Out on a Limb: Appendage Length and Function Shape Leg Loss Without Evidence of Autotomy Modulation**.
+
+## Usage restrictions:
+
+All scripts and processed datasets are made available under the terms of the **Creative Commons Attribution 4.0 International License (CC-BY 4.0)**.
+
+You are free to share and adapt the material, provided that appropriate credit is given.
+
+## Citation:
+
+If you use any part of this repository, please cite the manuscript:
+
+**Kinoshita, D. A., W. C. A. Bezerra, T. M. Del Corso, and G. Machado. 2026. Going Out on a Limb: Appendage Length and Function Shape Leg Loss Without Evidence of Autotomy Modulation. *Ethology* 1–9.**
+
+DOI: 10.1111/eth.70118
+
+# Contact
+
+For questions, suggestions, or collaboration inquiries, please contact:
+
+- **Daniela A. Kinoshita** (danielaakinoshita@gmail.com)
+- **Wellen C. A. Bezerra** (wellen@ib.usp.br)
