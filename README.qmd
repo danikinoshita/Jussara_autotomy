@@ -36,7 +36,7 @@ Contains the raw datasets exported directly from field notebooks and early sprea
     -   `total` - Total number of autotomized legs.
     -   `population` - Sampling event, identified by collector initials (March 2002 = `TG`, October 2009 = `MC`, March 2011 = `GE`, and February 2012 = `GP`).
 
--   `sex_raw` - A 147 × 8 data frame containing autotomy information for 147 individuals whose sex was determined during the 2002 sampling event.
+-   `sex_raw` - A 147 × 8 data frame containing autotomy information for 147 individuals whose sex was determined during the 2002 sampling event. Empty cells (NA) indicate an absence of autotomy, corresponding to the value `0`.
     -   `Right` and `Left` - Total number of autotomized ambulatory legs on the right and left sides of the body, respectively (`0` to `3`).
     -   `Leg.I` to `Leg IV` - Autotomy status of leg pairs I–IV (`0` = intact, `1` = autotomized).
     -   `Male` and `Female` - Sex indicator variables (`1` = yes, `0` = no).
@@ -166,5 +166,5 @@ DOI: 10.1111/eth.70118
 
 For questions, suggestions, or collaboration inquiries, please contact:
 
-- **Daniela A. Kinoshita** (danielaakinoshita@gmail.com)
+- **Daniela A. Kinoshita** (daniela.a.kinoshita@gmail.com)
 - **Wellen C. A. Bezerra** (wellen@ib.usp.br)
