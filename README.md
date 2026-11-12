@@ -309,10 +309,6 @@ renv::restore()                # installs packages from renv.lock
 
 # License
 
-The scripts and data in this repository are associated with the
-manuscript: **Going Out on a Limb: Appendage Length and Function Shape
-Leg Loss Without Evidence of Autotomy Modulation**.
-
 ## Usage restrictions:
 
 All scripts and processed datasets deposited in Dryad are dedicated to the public 
