@@ -315,12 +315,12 @@ Leg Loss Without Evidence of Autotomy Modulation**.
 
 ## Usage restrictions:
 
-All scripts and processed datasets are made available under the terms of
-the **Creative Commons Attribution 4.0 International License (CC-BY
-4.0)**.
+All scripts and processed datasets deposited in Dryad are dedicated to the public 
+domain under the **CC0 1.0 Universal Public Domain Dedication**.
 
-You are free to share and adapt the material, provided that appropriate
-credit is given.
+To the extent possible under law, the authors have waived all copyright and 
+related rights to these materials, allowing them to be freely shared, adapted, 
+and reused without restrictions or attribution requirements.
 
 ## Citation:
 
