@@ -333,11 +333,6 @@ Fig2 <- row_A / row_B
 Fig2
 ```
 
-```{r echo=FALSE, eval=FALSE}
-ggsave(here("outputs","figures","Fig_2.png"), plot = Fig2, width = 9, height = 12, dpi = 600)
-ggsave(here("outputs","figures","Fig_2.pdf"), plot = Fig2, width = 9, height = 12)
-```
-
 ```{r echo=FALSE}
 df_sex <- sex_data %>%
   filter(autotomy == 1) %>%
@@ -416,10 +411,6 @@ boxplot_leglength <- ggplot(leg_length_data, aes(x = leg_id, y = length)) +
     axis.text.y = element_text(size = 12),
     axis.text.x = element_text(size = 16),
   )
-```
-
-```{r echo=FALSE, eval=FALSE}
-ggsave(here("outputs","supplementary_material","leg_length_fig.png"), plot = boxplot_leglength)
 ```
 
 ### Descriptive mean and sd
@@ -626,11 +617,6 @@ Fig_3 = ggplot(emm,
     axis.line = element_line(color = "black"),
     legend.position = "right"
   )
-```
-
-```{r eval=FALSE}
-ggsave(here("outputs","figures","Fig_3.png"), plot = Fig_3, width = 10, height = 7, dpi = 600)
-ggsave(here("outputs","figures","Fig_3.pdf"), plot = Fig_3, width = 10, height = 7)
 ```
 
 ```{r save emm, eval=FALSE}

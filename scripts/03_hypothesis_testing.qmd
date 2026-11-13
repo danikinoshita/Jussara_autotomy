@@ -326,10 +326,6 @@ fig_null <- fig_leg1 + fig_leg2 +
   )
 ```
 
-```{r eval=FALSE}
-ggsave(here("outputs","supplementary_material","null_histograms.png"), plot=fig_null, width=8, height=7)
-```
-
 ```{r trying to make graphics, include=FALSE, eval=FALSE}
 no_leg1 <- sum(!(main_raw$r1 == 1 & main_raw$l1 == 1) & main_raw$total >=1)
 no_leg2 <- sum(!(main_raw$r2 == 1 & main_raw$l2 == 1) & main_raw$total >=1)
